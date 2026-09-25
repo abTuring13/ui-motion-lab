@@ -4,23 +4,57 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>UI Motion Lab</title>
+<meta name="description" content="Code-driven UI motion: a single-shape morph loop and a cursor-follow share button." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  :root { color-scheme: dark; }
-  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #111; color: #ededed; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; padding: 16px; box-sizing: border-box; }
-  main { width: min(520px, 100%); display: grid; gap: 12px; }
-  h1 { font-size: 22px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.02em; }
-  a { display: block; padding: 18px 20px; border-radius: 14px; background: #1a1a1a; border: 1px solid #262626; color: inherit; text-decoration: none; }
-  a:hover { background: #202020; }
-  a:focus-visible { outline: 2px solid #ededed; outline-offset: 2px; }
-  a b { display: block; font-weight: 500; margin-bottom: 4px; }
-  a span { color: #8a8a8a; font-size: 14px; }
+  :root { --light: #ffffff; --dark: #000000; --ink: #111111; --dim-light: #9a9a9a; --dim-dark: #6d6f78; }
+  * { box-sizing: border-box; }
+  html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+  html, body { margin: 0; }
+  body { font-family: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif; background: var(--dark); -webkit-font-smoothing: antialiased; }
+
+  section { position: relative; height: 100vh; height: 100svh; scroll-snap-align: start; overflow: hidden; }
+  section.light { background: var(--light); }
+  section.dark { background: var(--dark); }
+  iframe { display: block; width: 100%; height: 100%; border: 0; }
+
+  .hint {
+    position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    font-size: 13px; letter-spacing: .02em; text-decoration: none; color: var(--dim-light);
+  }
+  .hint svg { width: 16px; height: 16px; }
+  .hint:hover { color: var(--ink); }
+  .hint:focus-visible, .source:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; border-radius: 4px; }
+
+  .source {
+    position: absolute; right: 20px; bottom: 20px; font-size: 13px; text-decoration: none; color: var(--dim-dark);
+  }
+  .source:hover { color: #f7f7fa; }
+  .title {
+    position: absolute; left: 20px; top: 18px; font-size: 13px; font-weight: 500; color: var(--dim-light); pointer-events: none;
+  }
+  .dark .title { color: var(--dim-dark); }
+
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 </style>
 </head>
 <body>
-<main>
-  <h1>UI Motion Lab</h1>
-  <a href="morph/"><b>Morph Loop</b><span>One shape, 12 UI states, 120 BPM, 7 bars, all driven by seek(t)</span></a>
-  <a href="share-button/"><b>Cursor Share Button</b><span>Glowing orb that follows your pointer, with a rolling label</span></a>
-</main>
+  <section class="light" aria-label="Morph loop">
+    <iframe src="morph/?embed" title="Morph loop: one shape morphing through twelve UI states"></iframe>
+    <span class="title">Morph Loop</span>
+    <a class="hint" href="#share">
+      Scroll
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </a>
+  </section>
+
+  <section class="dark" id="share" aria-label="Cursor share button">
+    <iframe src="share-button/?embed" title="Share button with an orb that follows the cursor"></iframe>
+    <span class="title">Cursor Share Button</span>
+    <a class="source" href="https://github.com/abTuring13/ui-motion-lab">Source on GitHub ↗</a>
+  </section>
 </body>
 </html>

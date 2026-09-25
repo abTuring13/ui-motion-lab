@@ -200,6 +200,13 @@
   html.render body { padding: 0; background: var(--canvas); }
   html.render #frame { border-radius: 0; }
   html.render #controls { display: none; }
+
+  /* ?embed: bare animation on white, used by the showcase page */
+  html.embed { --canvas: #ffffff; }
+  html.embed body { padding: 0; background: var(--canvas); }
+  html.embed #frame { border-radius: 0; }
+  html.embed #controls { display: none; }
+  html.embed #shape { box-shadow: 0 0 0 1px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.06), 0 14px 36px -14px rgba(0,0,0,.24); }
 </style>
 </head>
 <body>
@@ -758,7 +765,9 @@ function labelHTML(label, q) {
    ===================================================================== */
 const params = new URLSearchParams(location.search);
 const RENDER = params.has('render');
+const EMBED = params.has('embed');
 if (RENDER) document.documentElement.classList.add('render');
+if (EMBED) document.documentElement.classList.add('embed');
 
 window.seek = seek;
 window.LOOP = P;
@@ -767,10 +776,10 @@ window.ready = document.fonts.ready
   .then(() => { seek(Number(params.get('t')) || 0); });
 
 function fit() {
-  const s = RENDER ? 1 : Math.min((innerWidth - 32) / 1440, (innerHeight - 32 - 54) / 1440);
+  const s = RENDER ? 1 : EMBED ? Math.min(innerWidth, innerHeight) / 1440 : Math.min((innerWidth - 32) / 1440, (innerHeight - 32 - 54) / 1440);
   el.frame.style.width = el.frame.style.height = px(1440 * s);
   el.stage.style.transform = `scale(${s})`;
-  if (!RENDER) {
+  if (!RENDER && !EMBED) {
     scrub.style.width = px(Math.max(160, Math.min(1440 * s - 330, 900)));
   }
 }

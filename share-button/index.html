@@ -68,6 +68,9 @@
   .share:hover .label span:first-child, .share:focus-visible .label span:first-child { transform: translateY(-145%); opacity: 0; }
   .share:hover .label span + span, .share:focus-visible .label span + span { transform: translateY(0); opacity: 1; }
 
+  /* ?embed: pure black, used by the showcase page */
+  html.embed { --bg: #000; }
+
   @media (prefers-reduced-motion: reduce) {
     .share, .orb, .label span { transition: none; }
   }
@@ -90,6 +93,7 @@
   <p>Hover and move your pointer across the button</p>
 </main>
 <script>
+  if (new URLSearchParams(location.search).has('embed')) document.documentElement.classList.add('embed');
   // Same as the React onPointerEnter / onPointerMove handler: feed the pointer position into CSS vars.
   const btn = document.getElementById('share');
   const updateOrbPosition = e => {
