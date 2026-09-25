@@ -1,0 +1,12 @@
+{
+  "name": "ui-motion-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "beats": "node render/render.mjs --beats",
+    "render": "node render/render.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.50.0"
+  }
+}

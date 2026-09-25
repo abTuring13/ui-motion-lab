@@ -1,0 +1,5 @@
+node_modules/
+render/frames/
+render/beats/
+out/
+.DS_Store
