@@ -5,6 +5,7 @@ Two small motion pieces. Both are plain HTML files with no build step: open them
 | Page | What it is |
 | --- | --- |
 | [`morph/`](morph/index.html) | **Morph Loop.** One shape moves through 12 UI states at 120 BPM over 7 bars (a 14 s loop). A cursor drives the changes with clicks and drags. |
+| [`dashboard/`](dashboard/index.html) | **Motion Dashboard.** The same components, driven by you. The music player streams real tracks with a live visualizer, and you can scrub, skip, and drag the volume past max to stretch it. It also has liquid tabs that morph the chart, a hover tooltip, liquid toggles, a Deploy button that goes button → loader → check → toast, and a ⌘K palette whose commands work. |
 | [`share-button/`](share-button/index.html) | **Cursor Share Button.** A glowing orange orb follows your pointer inside the button, and the label rolls over. This is a plain HTML/CSS port of [`CursorFollowShareButton.tsx`](share-button/CursorFollowShareButton.tsx), which is kept as the original React + Tailwind version. |
 
 ## Morph Loop
@@ -42,3 +43,13 @@ node render/render.mjs --mux-only             # re-encode without re-capturing t
 ```
 
 The full render captures 4 subframes per frame and blends them with ffmpeg `tmix`. That gives motion blur at 60 fps, written to `out/morph-loop.mp4`. Pass `--offset` to start the song on a downbeat.
+
+## Music credits
+
+The dashboard player uses these tracks, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) and re-encoded to 128 kbps:
+
+- "Ethereal Pulse" by Surf House Productions | https://surf-house-productions.bandcamp.com
+- "Afterglow Love" by | e s c p | | https://www.escp.space https://escp-music.bandcamp.com
+- "Rush Hour" by | e s c p | | https://www.escp.space https://escp-music.bandcamp.com
+
+Royalty Free Music by https://www.free-stock-music.com

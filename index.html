@@ -7,17 +7,20 @@
 <meta name="description" content="Code-driven UI motion: a single-shape morph loop and a cursor-follow share button." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="dashboard/dashboard.css" />
 <style>
   :root { --light: #ffffff; --dark: #000000; --ink: #111111; --dim-light: #9a9a9a; --dim-dark: #6d6f78; }
   * { box-sizing: border-box; }
-  html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
+  html { scroll-snap-type: y proximity; scroll-behavior: smooth; }
   html, body { margin: 0; }
   body { font-family: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif; background: var(--dark); -webkit-font-smoothing: antialiased; }
 
-  section { position: relative; height: 100vh; height: 100svh; scroll-snap-align: start; overflow: hidden; }
-  section.light { background: var(--light); }
-  section.dark { background: var(--dark); }
+  body > section { position: relative; height: 100vh; height: 100svh; scroll-snap-align: start; overflow: hidden; }
+  body > section.light { background: var(--light); }
+  body > section.dark { background: var(--dark); }
+  body > section.mid { height: auto; min-height: 100vh; min-height: 100svh; overflow: visible; background: #eeece8; display: flex; align-items: center; }
+  body > section.mid #dashboard { width: 100%; }
   iframe { display: block; width: 100%; height: 100%; border: 0; }
 
   .hint {
@@ -45,10 +48,14 @@
   <section class="light" aria-label="Morph loop">
     <iframe src="morph/?embed" title="Morph loop: one shape morphing through twelve UI states"></iframe>
     <span class="title">Morph Loop</span>
-    <a class="hint" href="#share">
+    <a class="hint" href="#dashboard-section">
       Scroll
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
     </a>
+  </section>
+
+  <section class="mid" id="dashboard-section" aria-label="Interactive dashboard">
+    <div id="dashboard"></div>
   </section>
 
   <section class="dark" id="share" aria-label="Cursor share button">
@@ -56,5 +63,6 @@
     <span class="title">Cursor Share Button</span>
     <a class="source" href="https://github.com/abTuring13/ui-motion-lab">Source on GitHub ↗</a>
   </section>
+  <script src="dashboard/dashboard.js"></script>
 </body>
 </html>
