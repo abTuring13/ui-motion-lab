@@ -4,105 +4,125 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Cursor Share Button</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  :root { color-scheme: dark; --bg: #0d0e12; --fg: #f7f7fa; --dim: #6d6f78; --orange: #ff6a22; }
+  :root { --bg: #0b0b0b; --paper: #ffffff; --ink: #111111; --dim: #6d6f78; }
+  html.embed { --bg: #000; }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
   body {
-    background: var(--bg); color: var(--fg);
-    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    background: var(--bg); color: #ededed;
+    font-family: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased;
     display: grid; place-items: center; padding: 16px;
   }
-  main { display: grid; justify-items: center; gap: 28px; }
-  p { margin: 0; font-size: 14px; color: var(--dim); }
+  main { display: grid; justify-items: center; gap: 26px; }
+  p { margin: 0; font-size: 14px; color: var(--dim); letter-spacing: -.01em; }
 
-  /* ---- button (1:1 port of the Tailwind classes) ---- */
+  /* white pill; the black orb trails the pointer on a spring */
   .share {
-    --cursor-x: 50%;
-    --cursor-y: 50%;
-    position: relative; isolation: isolate;
-    display: inline-grid; place-items: center;
-    height: 66px; width: min(200px, calc(100vw - 40px));
-    cursor: pointer; overflow: hidden;
-    border: 0; border-radius: 9999px;
-    background: linear-gradient(110deg, #202029 0%, #181820 48%, #15161b 100%);
-    font-family: Arial, Helvetica, sans-serif;
-    color: var(--fg);
-    box-shadow: inset 0 3px 4px rgba(0,0,0,.72), inset 0 -2px 2px rgba(255,255,255,.07);
-    transition: background .3s ease, box-shadow .3s cubic-bezier(.16,1,.3,1);
-  }
-  .share:hover, .share:focus-visible {
-    background: linear-gradient(110deg, #1e1e26 0%, #171820 48%, #121319 100%);
-    box-shadow: inset 0 2px 2px rgba(255,255,255,.24), inset 0 -3px 4px rgba(0,0,0,.74), 0 10px 13px rgba(0,0,0,.58);
-  }
-  .share:focus-visible { outline: 2px solid var(--orange); outline-offset: 7px; }
-
-  /* orange orb that follows the pointer */
-  .orb {
-    pointer-events: none; position: absolute; z-index: 0;
+    position: relative; isolation: isolate; overflow: hidden;
     display: grid; place-items: center;
-    width: 40px; height: 40px; border-radius: 9999px;
-    background: var(--orange); color: #090a0f;
-    opacity: 0;
-    box-shadow: 0 0 0 1px rgba(255,198,139,.48), 0 0 11px 4px rgba(255,111,35,.92),
-                0 0 28px 10px rgba(255,91,20,.48), 0 0 42px 16px rgba(255,76,19,.16);
-    left: var(--cursor-x); top: var(--cursor-y);
-    transform: translate(-50%,-50%) scale(.55);
-    transition: transform .3s cubic-bezier(.16,1,.3,1), opacity .2s ease;
+    width: min(224px, calc(100vw - 40px)); height: 64px;
+    border: 0; border-radius: 999px; padding: 0; cursor: pointer;
+    background: var(--paper); color: var(--ink);
+    font: 500 18px/1 "Geist", ui-sans-serif, system-ui, sans-serif; letter-spacing: -.02em;
+    box-shadow: 0 1px 2px rgba(0,0,0,.2), 0 18px 40px -20px rgba(255,255,255,.18);
+    -webkit-tap-highlight-color: transparent;
   }
-  .orb::before {
-    content: ""; position: absolute; inset: -30px; z-index: -1; border-radius: 9999px;
-    background: radial-gradient(circle, rgba(255,106,34,.34), rgba(255,72,24,.12) 38%, transparent 69%);
+  .share:focus-visible { outline: 2px solid var(--paper); outline-offset: 6px; }
+  .share::after { content: ""; position: absolute; inset: 0; z-index: 2; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); opacity: 0; transition: opacity .3s ease; pointer-events: none; }
+  .share.copied::after { opacity: 1; }
+  .orb {
+    position: absolute; left: 0; top: 0; z-index: 0; width: 40px; height: 40px; margin: -20px 0 0 -20px;
+    border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center;
+    pointer-events: none; transform: scale(0);
   }
-  .orb svg { width: 19px; height: 19px; transform: translate(-1px, 1px) rotate(-5deg); }
-  .share:hover .orb, .share:focus-visible .orb { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+  .orb svg { width: 18px; height: 18px; }
+  .ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-  /* label rolls up and a copy rolls in from below */
-  .label { position: relative; z-index: 10; display: grid; place-items: center; height: 25px; overflow: hidden; }
-  .label span {
-    grid-area: 1 / 1; white-space: nowrap;
-    font-size: 17px; font-weight: 400; letter-spacing: -.4px; line-height: 1.15;
-    transition: transform .42s cubic-bezier(.16,1,.3,1), opacity .2s ease;
-  }
-  .label span + span { transform: translateY(145%); opacity: 0; }
-  .share:hover .label span:first-child, .share:focus-visible .label span:first-child { transform: translateY(-145%); opacity: 0; }
-  .share:hover .label span + span, .share:focus-visible .label span + span { transform: translateY(0); opacity: 1; }
-
-  /* ?embed: pure black, used by the showcase page */
-  html.embed { --bg: #000; }
-
-  @media (prefers-reduced-motion: reduce) {
-    .share, .orb, .label span { transition: none; }
-  }
+  /* labels use difference blending: black on white, white where the orb passes under */
+  .label, .done { position: relative; z-index: 1; grid-area: 1 / 1; color: #fff; mix-blend-mode: difference; pointer-events: none; }
+  .label { display: grid; height: 24px; overflow: hidden; }
+  .label span { grid-area: 1 / 1; line-height: 24px; white-space: nowrap; transition: transform .45s cubic-bezier(.2,.9,.3,1), opacity .2s ease; }
+  .label span + span { transform: translateY(110%); opacity: 0; }
+  .share.hover .label span:first-child { transform: translateY(-110%); opacity: 0; }
+  .share.hover .label span + span { transform: none; opacity: 1; }
+  .done { display: flex; align-items: center; gap: 8px; opacity: 0; transform: translateY(8px); filter: blur(4px); transition: opacity .2s ease, transform .35s cubic-bezier(.2,.9,.3,1), filter .2s ease; }
+  .done svg { width: 18px; height: 18px; }
+  .share.copied .label { opacity: 0; transition: opacity .12s ease; }
+  .share.copied .done { opacity: 1; transform: none; filter: none; transition-delay: .08s; }
 </style>
 </head>
 <body>
 <main>
   <button type="button" class="share" id="share">
-    <span class="orb" aria-hidden="true">
-      <svg viewBox="0 0 32 32" fill="none">
-        <path d="M28.14 4.94 19.6 27.72c-.4 1.06-1.87 1.1-2.33.06l-4.04-9.05-9.03-4.02c-1.04-.46-1-1.93.06-2.33L27.04 3.86c.74-.28 1.38.34 1.1 1.08Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>
-        <path d="m13.02 18.63 5.75-5.75" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
-      </svg>
-    </span>
-    <span class="label">
-      <span>Share it now</span>
-      <span aria-hidden="true">Share it now</span>
-    </span>
+    <span class="orb" id="orb" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><path d="M21 3 10.5 13.5"/><path d="M21 3 14.5 21l-4-7.5L3 9.5z"/></svg></span>
+    <span class="label"><span>Share it now</span><span aria-hidden="true">Share it now</span></span>
+    <span class="done" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Link copied</span>
   </button>
-  <p>Hover and move your pointer across the button</p>
+  <p id="hint">Hover, then click to copy the link</p>
 </main>
 <script>
   if (new URLSearchParams(location.search).has('embed')) document.documentElement.classList.add('embed');
-  // Same as the React onPointerEnter / onPointerMove handler: feed the pointer position into CSS vars.
-  const btn = document.getElementById('share');
-  const updateOrbPosition = e => {
-    const b = btn.getBoundingClientRect();
-    btn.style.setProperty('--cursor-x', `${e.clientX - b.left}px`);
-    btn.style.setProperty('--cursor-y', `${e.clientY - b.top - 14}px`);
-  };
-  btn.addEventListener('pointerenter', updateOrbPosition);
-  btn.addEventListener('pointermove', updateOrbPosition);
+
+  const btn = document.getElementById('share'), orb = document.getElementById('orb'), icon = orb.firstElementChild;
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // tiny spring: x follows t (k = stiffness, c = damping)
+  const spring = (x, k, c) => ({ x, v: 0, t: x, k, c });
+  const X = spring(112, 320, 30), Y = spring(32, 320, 30), Sc = spring(0, 420, 32);
+  const springs = [X, Y, Sc];
+  let hovering = false, copiedTimer = 0;
+
+  const local = e => { const r = btn.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  btn.addEventListener('pointerenter', e => {
+    const [x, y] = local(e);
+    X.x = X.t = x; Y.x = Y.t = y; X.v = Y.v = 0;       // appear under the pointer, then trail it
+    hovering = true; btn.classList.add('hover');
+    if (!btn.classList.contains('copied')) Sc.t = 1;
+  });
+  btn.addEventListener('pointermove', e => { const [x, y] = local(e); X.t = x; Y.t = y; });
+  btn.addEventListener('pointerleave', () => {
+    hovering = false; btn.classList.remove('hover');
+    if (!btn.classList.contains('copied')) Sc.t = 0;
+  });
+  btn.addEventListener('focus', () => { if (!hovering) { X.x = X.t = btn.offsetWidth / 2; Y.x = Y.t = btn.offsetHeight / 2; btn.classList.add('hover'); Sc.t = 1; } });
+  btn.addEventListener('blur', () => { if (!hovering) { btn.classList.remove('hover'); Sc.t = 0; } });
+
+  function shareUrl() {
+    try { return (window.top || window).location.href.split('#')[0]; } catch { return location.href.split('#')[0]; }
+  }
+  btn.addEventListener('click', async e => {
+    if (e.detail === 0) { X.t = btn.offsetWidth / 2; Y.t = btn.offsetHeight / 2; }   // keyboard: open from the centre
+    // the circle opens out of the orb and fills the button
+    const r = btn.getBoundingClientRect();
+    const far = Math.max(Math.hypot(X.t, Y.t), Math.hypot(r.width - X.t, Y.t), Math.hypot(X.t, r.height - Y.t), Math.hypot(r.width - X.t, r.height - Y.t));
+    Sc.t = (far + 4) / 20;
+    btn.classList.add('copied');
+    btn.setAttribute('aria-label', 'Link copied');
+    try { await navigator.clipboard.writeText(shareUrl()); } catch { /* clipboard blocked: the feedback still plays */ }
+    clearTimeout(copiedTimer);
+    copiedTimer = setTimeout(() => {
+      btn.classList.remove('copied'); btn.removeAttribute('aria-label');
+      Sc.t = hovering || document.activeElement === btn ? 1 : 0;
+    }, 1700);
+  });
+
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const n = Math.max(1, Math.ceil(dt * 240));
+    for (const s of springs) {
+      if (reduce) { s.x = s.t; s.v = 0; continue; }
+      for (let i = 0; i < n; i++) { s.v += (-s.k * (s.x - s.t) - s.c * s.v) * (dt / n); s.x += s.v * (dt / n); }
+    }
+    orb.style.transform = `translate(${X.x.toFixed(2)}px, ${(Y.x - 12).toFixed(2)}px) scale(${Math.max(0, Sc.x).toFixed(4)})`;
+    icon.style.opacity = Math.max(0, 1 - (Sc.x - 1) * 1.5).toFixed(3);   // the icon melts away as the orb grows
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
 </script>
 </body>
 </html>

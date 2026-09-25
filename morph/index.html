@@ -794,7 +794,8 @@ for (let b = 0; b < P / BEAT; b++) {
 const ICON_PAUSE = '<svg viewBox="0 0 14 14"><rect x="3" y="2" width="3" height="10" rx="1" fill="currentColor"/><rect x="8" y="2" width="3" height="10" rx="1" fill="currentColor"/></svg>';
 const ICON_PLAY = '<svg viewBox="0 0 14 14"><path d="M4 2.2v9.6L11.5 7z" fill="currentColor"/></svg>';
 
-let playing = !RENDER && !params.has('t');
+const MANUAL = params.has('manual'); // driven from outside via window.seek (the launch film's phone)
+let playing = !RENDER && !MANUAL && !params.has('t');
 let t0 = performance.now() / 1000, pausedAt = Number(params.get('t')) || 0, lastT = pausedAt;
 const now = () => playing ? ((performance.now() / 1000 - t0) % P + P) % P : pausedAt;
 function setPlaying(p) {
@@ -880,7 +881,7 @@ function frame() {
 addEventListener('resize', fit);
 fit();
 seek(pausedAt);
-if (!RENDER) window.ready.then(() => requestAnimationFrame(frame));
+if (!RENDER && !MANUAL) window.ready.then(() => requestAnimationFrame(frame));
 </script>
 </body>
 </html>

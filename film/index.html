@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Launch Film</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root { --ink: #111111; --night: #0b0b0b; --muted: #767676; --soft: #f3f1ed; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: #000; overflow: hidden; font-family: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+  #frame { position: absolute; overflow: hidden; }
+  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; overflow: hidden; background: var(--night); }
+  .full { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+  .mask { display: inline-block; overflow: hidden; vertical-align: top; padding: 0 .04em .1em; margin: 0 -.04em -.1em; }
+  .mask > span { display: inline-block; }
+
+  /* scene 1: white, hook + prompt pill */
+  #white { background: #fff; }
+  #hook { display: flex; align-items: center; justify-content: center; gap: .24em; font-size: 150px; font-weight: 600; letter-spacing: -.055em; line-height: 1.08; color: var(--ink); }
+  #pill { position: absolute; overflow: hidden; background: var(--soft); }
+  #pillIn { position: absolute; left: 0; top: 0; width: 1080px; height: 140px; display: flex; align-items: center; padding: 0 20px 0 56px; }
+  #pillQ { flex: 1; display: flex; align-items: center; font-size: 44px; letter-spacing: -.03em; color: var(--ink); white-space: pre; }
+  #caret { display: inline-block; width: 3px; height: 50px; background: var(--ink); margin-left: 2px; }
+  #pillPh { color: #a3a3a3; margin-left: -5px; }
+  #gen { width: 260px; height: 100px; border-radius: 50px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 32px; font-weight: 500; letter-spacing: -.02em; flex: none; }
+  #gen svg { width: 30px; height: 30px; }
+  .ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* dark scene */
+  #dark { background: var(--night); color: #fff; }
+  .scene { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 960px 540px; }
+  #wall .tile { position: absolute; width: 280px; height: 280px; border-radius: 22px; overflow: hidden; background: #161616; }
+  .tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tile .ring { position: absolute; inset: 0; border-radius: 22px; box-shadow: inset 0 0 0 3px #fff; }
+  .tile .rank { position: absolute; left: 14px; top: 14px; background: #fff; color: var(--ink); border-radius: 999px; padding: 5px 11px; font-size: 18px; font-weight: 600; letter-spacing: -.01em; }
+  #scan { position: absolute; top: 72px; width: 2px; height: 936px; background: #fff; }
+  #bigType { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 170px; font-weight: 600; letter-spacing: -.055em; line-height: 1.02; }
+  #bigType .l2 { color: var(--muted); }
+  #carWrap { perspective: 2000px; perspective-origin: 960px 420px; }
+  #car { position: absolute; left: 960px; top: 470px; width: 0; height: 0; transform-style: preserve-3d; }
+  .card { position: absolute; left: -180px; top: -180px; width: 360px; height: 360px; backface-visibility: hidden; }
+  .card img { position: absolute; left: 0; width: 360px; height: 360px; object-fit: cover; border-radius: 28px; display: block; }
+  .card .face { top: 0; }
+  .card .refl { top: 372px; transform: scaleY(-1); opacity: .2; -webkit-mask-image: linear-gradient(to top, rgba(0,0,0,.9), transparent 55%); mask-image: linear-gradient(to top, rgba(0,0,0,.9), transparent 55%); }
+  #bezel { position: absolute; background: #191919; box-shadow: 0 0 0 2px #2a2a2a, 0 50px 90px -40px rgba(0,0,0,.9); }
+  #screen { position: absolute; overflow: hidden; background: #fff; }
+  #screen iframe { position: absolute; left: 0; width: 390px; height: 844px; border: 0; transform-origin: 0 0; pointer-events: none; }
+  #screen img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  #flipWrap { position: absolute; left: 1060px; top: 290px; width: 480px; height: 500px; perspective: 1600px; }
+  #flip { position: absolute; inset: 0; transform-style: preserve-3d; }
+  .fface { position: absolute; inset: 0; border-radius: 32px; background: #151515; box-shadow: inset 0 0 0 1px #262626; backface-visibility: hidden; padding: 40px; display: flex; flex-direction: column; }
+  .fface.back { transform: rotateY(180deg); }
+  .flabel { font-size: 22px; font-weight: 500; color: var(--muted); letter-spacing: -.01em; }
+  .fprompt { font-size: 50px; font-weight: 600; letter-spacing: -.04em; margin: 14px 0 auto; }
+  .frow { display: flex; justify-content: space-between; align-items: baseline; padding: 16px 0; border-top: 1px solid #262626; font-size: 24px; color: #bdbdbd; letter-spacing: -.01em; }
+  .frow b { color: #fff; font-weight: 500; }
+  .res { margin-top: 18px; display: flex; flex-direction: column; gap: 22px; }
+  .res div { display: grid; grid-template-columns: 1fr auto; row-gap: 10px; font-size: 24px; color: #bdbdbd; }
+  .res b { font-size: 34px; color: #fff; font-weight: 600; letter-spacing: -.03em; }
+  .res i { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: #262626; position: relative; overflow: hidden; }
+  .res i::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: var(--w, 0%); background: #fff; border-radius: 3px; }
+  .stat { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .stat b { font-size: 300px; font-weight: 600; letter-spacing: -.06em; line-height: .95; font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 48px; color: var(--muted); letter-spacing: -.03em; margin-top: 18px; }
+  #ticker { overflow: hidden; }
+  #tickRow { position: absolute; left: 0; top: 380px; white-space: nowrap; font-size: 240px; font-weight: 600; letter-spacing: -.06em; line-height: 1.1; }
+  #tickRow i { font-style: normal; color: #3a3a3a; margin: 0 .22em; }
+  #logo { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  #mark { width: 150px; height: 150px; border-radius: 44px; background: #fff; display: grid; place-items: center; }
+  #mark::after { content: ""; width: 56px; height: 56px; border-radius: 50%; background: var(--night); }
+  #wordmark { margin-top: 56px; font-size: 120px; font-weight: 600; letter-spacing: -.055em; line-height: 1.05; }
+  #tagline { margin-top: 18px; font-size: 40px; color: var(--muted); letter-spacing: -.03em; }
+  #cursor { position: absolute; left: 0; top: 0; width: 64px; height: 64px; transform-origin: 13.7px 8px; filter: drop-shadow(0 3px 4px rgba(0,0,0,.22)); }
+  #black { background: #000; pointer-events: none; }
+
+  /* ---------- overlay UI ---------- */
+  #ui { position: absolute; left: 0; right: 0; bottom: 18px; display: flex; align-items: center; justify-content: center; gap: 14px; padding: 0 16px; pointer-events: none; }
+  #ui > * { pointer-events: auto; }
+  #sound {
+    height: 36px; padding: 0 14px 0 11px; border-radius: 18px; border: 0; cursor: pointer;
+    background: rgba(24,24,24,.86); color: #ededed; font: 500 13px "Geist", ui-sans-serif, system-ui, sans-serif;
+    display: flex; align-items: center; gap: 8px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  }
+  #sound:hover { background: rgba(36,36,36,.9); }
+  #sound:focus-visible { outline: 2px solid #ededed; outline-offset: 2px; }
+  #sound svg { width: 16px; height: 16px; }
+  #sound .mx { display: none; }
+  #sound[aria-pressed="false"] .mx { display: inline; }
+  #sound[aria-pressed="false"] .w { display: none; }
+  #ruler { position: relative; height: 36px; width: min(420px, 60vw); border-radius: 18px; background: rgba(24,24,24,.86); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  #ruler i { position: absolute; top: 50%; width: 1.5px; height: 8px; margin: -4px 0 0 -.75px; border-radius: 1px; background: #4a4a4a; }
+  #ruler i.bar { height: 14px; margin-top: -7px; background: #7a7a7a; }
+  #ruler b { position: absolute; top: 50%; width: 2.5px; height: 22px; margin: -11px 0 0 -1.25px; border-radius: 2px; background: #fff; }
+  html.render #ui { display: none; }
+</style>
+</head>
+<body>
+<div id="frame"><div id="stage">
+  <div class="full" id="white"></div>
+  <div class="full" id="hook">
+    <span class="mask"><span>Motion</span></span><span class="mask"><span>made</span></span><span class="mask"><span>of</span></span><span class="mask" id="codeWord"><span>code</span></span>
+  </div>
+  <div id="pill"><div id="pillIn">
+    <div id="pillQ"><span id="pillText"></span><i id="caret"></i><span id="pillPh">Describe the motion</span></div>
+    <div id="gen"><span>Generate</span><svg class="ico" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+  </div></div>
+
+  <div class="full" id="dark">
+    <div class="scene" id="wall"></div>
+    <div id="scan"></div>
+    <div class="scene" id="bigType"><span class="mask"><span>One shape</span></span><span class="mask l2"><span>twelve states</span></span></div>
+    <div class="scene" id="carWrap"><div id="car"></div></div>
+    <div class="scene" id="phoneScene">
+      <div id="bezel"></div>
+      <div id="screen"><iframe id="phoneFrame" title="Live morph loop" tabindex="-1" src="../morph/?embed&manual"></iframe><img id="screenStill" alt="" src="clips/morph-05.jpg"></div>
+      <div id="flipWrap"><div id="flip">
+        <div class="fface front">
+          <div class="flabel">Prompt</div>
+          <div class="fprompt">make it move</div>
+          <div class="frow"><span>Style</span><b>Minimal</b></div>
+          <div class="frow"><span>Tempo</span><b>120 BPM</b></div>
+          <div class="frow"><span>Output</span><b>One HTML file</b></div>
+        </div>
+        <div class="fface back">
+          <div class="flabel">Result</div>
+          <div class="res" id="res">
+            <div><span>UI states</span><b>12</b><i></i></div>
+            <div><span>Beats</span><b>28</b><i></i></div>
+            <div><span>Frames</span><b>840</b><i></i></div>
+            <div><span>Keyframes</span><b>0</b><i></i></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+    <div class="scene" id="stats"></div>
+    <div class="scene" id="ticker"><div id="tickRow"></div></div>
+    <div class="scene" id="logo"><div id="mark"></div><span class="mask" id="wordmark"><span>UI Motion Lab</span></span><span class="mask" id="tagline"><span>Motion made of code</span></span></div>
+  </div>
+
+  <svg id="cursor" viewBox="0 0 28 28"><path d="M6 3.5v18.2l4.6-4.3 3 6.9 3.1-1.3-3-6.8h6.3z" fill="#111" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
+  <div class="full" id="black"></div>
+</div></div>
+
+<div id="ui">
+  <button id="sound" aria-pressed="false" aria-label="Sound">
+    <svg class="ico" viewBox="0 0 24 24"><path d="M11 5 6.5 9H3.5v6h3l4.5 4z"/><path class="w" d="M15.5 9a4 4 0 0 1 0 6"/><path class="w" d="M18.5 6.5a8 8 0 0 1 0 11"/><path class="mx" d="m16 9.5 5 5m0-5-5 5"/></svg>
+    <span id="soundLabel">Sound off</span>
+  </button>
+  <div id="ruler" aria-hidden="true"><b id="rulerHead"></b></div>
+</div>
+
+<script>
+/* =====================================================================
+   Launch film: 10 bars at 120 BPM, every style computed from t in seek(t).
+   Song: "Island Breeze" (Surf House Productions, CC BY 4.0), cut so the drop
+   (measured with numpy: 120.01 BPM, grid locked to 172 kicks) lands on bar 3.
+   ===================================================================== */
+const BPM = 120.01, B = 60 / BPM, BAR = 4 * B, P = 40 * B;
+
+const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
+const mix = (a, b, k) => a + (b - a) * k;
+const ramp = (t, a, d) => clamp01((t - a) / d);
+const eo = x => 1 - Math.pow(1 - clamp01(x), 3);
+const ei = x => Math.pow(clamp01(x), 3);
+const eio = x => { x = clamp01(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+function S(dt, w = 16, z = 0.9) {            // closed-form spring step, 0 → 1
+  if (dt <= 0) return 0;
+  if (z >= 1) return 1 - Math.exp(-w * dt) * (1 + w * dt);
+  const wd = w * Math.sqrt(1 - z * z);
+  return 1 - Math.exp(-z * w * dt) * (Math.cos(wd * dt) + (z * w / wd) * Math.sin(wd * dt));
+}
+const px = n => n.toFixed(2) + 'px';
+const $ = id => document.getElementById(id);
+const show = (el, on) => { const d = on ? '' : 'none'; if (el.style.display !== d) el.style.display = d; };
+const beat = n => n * B;
+
+/* ---------- footage: stills of our own components ---------- */
+const WALL = ['morph-01', 'morph-04', 'dash-chart', 'morph-06', 'morph-02',
+              'morph-08', 'dash-player', 'morph-10', 'morph-09', 'morph-12',
+              'morph-03', 'morph-11', 'dash-palette', 'morph-07', 'morph-05'];
+const WINNERS = [6, 8, 11];                 // dash-player, chart, palette
+const CARDS = ['morph-05', 'morph-09', 'dash-chart', 'morph-04', 'morph-11', 'dash-player', 'morph-06', 'morph-08'];
+const STATS = [['0', 'keyframes'], ['840', 'frames rendered'], ['120', 'beats per minute'], ['1', 'HTML file']];
+const TYPED = 'make it move';
+
+const wall = $('wall');
+const tiles = WALL.map((name, i) => {
+  const d = document.createElement('div');
+  d.className = 'tile';
+  const col = i % 5, row = Math.floor(i / 5);
+  const x = 212 + col * 304, y = 96 + row * 304;
+  d.style.left = x + 'px'; d.style.top = y + 'px';
+  d.innerHTML = `<img alt="" src="clips/${name}.jpg"><i class="ring"></i>` + (WINNERS.includes(i) ? `<b class="rank">0${WINNERS.indexOf(i) + 1}</b>` : '');
+  wall.appendChild(d);
+  const cx = x + 140, cy = y + 140;
+  return { el: d, img: d.querySelector('img'), ring: d.querySelector('.ring'), rank: d.querySelector('.rank'), cx, delay: Math.hypot(cx - 960, cy - 540) / 900 * 0.32 };
+});
+const car = $('car');
+const cards = CARDS.map((name, i) => {
+  const d = document.createElement('div');
+  d.className = 'card';
+  d.innerHTML = `<img class="face" alt="" src="clips/${name}.jpg"><img class="refl" alt="" src="clips/${name}.jpg">`;
+  d.style.transform = `rotateY(${i * 45}deg) translateZ(640px)`;
+  car.appendChild(d);
+  return { el: d, face: d.querySelector('.face'), refl: d.querySelector('.refl'), a: i * 45 };
+});
+const statEls = STATS.map(([n, l]) => {
+  const d = document.createElement('div');
+  d.className = 'stat';
+  d.innerHTML = `<b>${n}</b><span>${l}</span>`;
+  $('stats').appendChild(d);
+  return d;
+});
+$('tickRow').innerHTML = Array(4).fill('Design<i>·</i>Code<i>·</i>Motion<i>·</i>').join('');
+const resBars = [...$('res').querySelectorAll('i')];
+const RES_W = [0.75, 0.55, 1, 0.02];
+
+const E = {
+  stage: $('stage'), frame: $('frame'), white: $('white'), hook: $('hook'), words: [...$('hook').children].map(m => m.firstElementChild),
+  codeWord: $('codeWord'), pill: $('pill'), pillIn: $('pillIn'), pillText: $('pillText'), caret: $('caret'), pillPh: $('pillPh'), gen: $('gen'),
+  dark: $('dark'), wall, scan: $('scan'), bigType: $('bigType'), bigLines: [...$('bigType').children].map(m => m.firstElementChild),
+  carWrap: $('carWrap'), phoneScene: $('phoneScene'), bezel: $('bezel'), screen: $('screen'), phoneFrame: $('phoneFrame'), screenStill: $('screenStill'),
+  flipWrap: $('flipWrap'), flip: $('flip'), stats: $('stats'), ticker: $('ticker'), tickRow: $('tickRow'),
+  logo: $('logo'), mark: $('mark'), wordmark: $('wordmark').firstElementChild, tagline: $('tagline').firstElementChild,
+  cursor: $('cursor'), black: $('black'),
+};
+
+/* ---------- geometry measured at runtime (match cuts) ---------- */
+const PILL = { x: 420, y: 470, w: 1080, h: 140 };
+const GEN_C = { x: PILL.x + PILL.w - 20 - 130, y: PILL.y + PILL.h / 2 };
+const SCREEN = { x: 570, y: 129, w: 380, h: 822 };
+let CODE = { x: 1300, y: 460, w: 380, h: 170 }, FRONT = { x: 695, y: 205, w: 530, h: 530 };
+function measure() {
+  const st = E.stage.getBoundingClientRect(), k = st.width / 1920;
+  const rel = r => ({ x: (r.left - st.left) / k, y: (r.top - st.top) / k, w: r.width / k, h: r.height / k });
+  E.hook.style.display = ''; E.words.forEach(w => (w.style.transform = 'none'));
+  CODE = rel(E.codeWord.getBoundingClientRect());
+  E.dark.style.display = ''; E.dark.style.clipPath = 'none'; E.carWrap.style.display = ''; E.carWrap.style.opacity = '1';
+  car.style.transform = 'rotateX(-6deg) rotateY(0deg)';
+  FRONT = rel(cards[0].face.getBoundingClientRect());
+}
+
+/* ---------- cursor path (sum of springs) ---------- */
+const CUR0 = [1680, 1000];
+const CURK = [[2.04, 790, 552], [3.02, 1335, 552]];
+const curAt = t => {
+  let x = CUR0[0], y = CUR0[1], px_ = CUR0[0], py_ = CUR0[1];
+  for (const [tk, kx, ky] of CURK) { const s = S(t - tk, 11, 1); x += (kx - px_) * s; y += (ky - py_) * s; px_ = kx; py_ = ky; }
+  return [x, y];
+};
+
+/* =====================================================================
+   seek(t)
+   ===================================================================== */
+let phoneReady = false;
+function seek(tIn) {
+  const t = ((tIn % P) + P) % P;
+
+  /* --- bars 1–2: white scene --- */
+  const whiteOn = t < 4.1;
+  show(E.white, whiteOn); show(E.hook, whiteOn && t < 2.9); show(E.pill, whiteOn && t >= 2.0);
+  if (whiteOn) {
+    E.words.forEach((w, i) => {
+      const inn = S(t - beat(i), 17, 0.9);
+      const out = i < 3 ? S(t - (2.0 + i * 0.05), 16, 1) : 0;
+      w.style.transform = `translateY(${((1 - inn) * 105 - out * 105).toFixed(2)}%)`;
+      w.style.filter = inn < 0.98 ? `blur(${((1 - inn) * 8).toFixed(2)}px)` : 'none';
+      w.style.opacity = i === 3 ? (1 - ramp(t, 2.02, 0.2)).toFixed(3) : '1';
+    });
+    if (t >= 2.0) {
+      const m = S(t - 2.0, 12, 0.86);
+      const r = { x: mix(CODE.x, PILL.x, m), y: mix(CODE.y, PILL.y, m), w: mix(CODE.w, PILL.w, m), h: mix(CODE.h, PILL.h, m) };
+      const P_ = E.pill.style;
+      P_.left = px(r.x); P_.top = px(r.y); P_.width = px(r.w); P_.height = px(r.h);
+      P_.borderRadius = px(mix(18, 70, m));
+      P_.opacity = ramp(t, 2.0, 0.12).toFixed(3);
+      E.pillIn.style.opacity = ramp(t, 2.12, 0.2).toFixed(3);
+      const n = TYPED.split('').filter((_, i) => t >= 2.25 + i * B / 8).length;
+      E.pillText.textContent = TYPED.slice(0, n);
+      E.pillPh.style.display = n ? 'none' : '';
+      const lastKey = n ? 2.25 + (n - 1) * B / 8 : 2.0;
+      E.caret.style.opacity = ((t - lastKey) % 1) < 0.55 ? '1' : '0';
+      const press = S(t - beat(7), 34, 0.75) - S(t - (beat(7) + 0.1), 18, 0.9);
+      E.gen.style.transform = `scale(${(1 - 0.06 * press).toFixed(4)})`;
+    }
+  }
+
+  /* --- the drop: a circle opens out of the button into the dark scene --- */
+  const R = t < 3.56 ? 0 : 50 + ei(ramp(t, 3.56, 4.0 - 3.56)) * 2250;
+  const darkOn = t >= 3.56;
+  show(E.dark, darkOn);
+  if (darkOn) E.dark.style.clipPath = t < 4.0 ? `circle(${R.toFixed(1)}px at ${GEN_C.x}px ${GEN_C.y}px)` : 'none';
+
+  /* --- bar 3: wall of real clips, scan line, 3 winners --- */
+  const wallOn = t >= 3.56 && t < 6.1;
+  show(E.wall, wallOn); show(E.scan, wallOn && t >= 4.4 && t < 5.7);
+  if (wallOn) {
+    const out = ramp(t, 5.86, 0.22);
+    E.wall.style.transform = `scale(${(1 + 0.035 * ramp(t, 4.0, BAR) + 0.06 * eo(out)).toFixed(4)})`;
+    E.wall.style.opacity = (1 - out).toFixed(3);
+    E.wall.style.filter = out > 0 ? `blur(${(out * 10).toFixed(2)}px)` : 'none';
+    const scanX = 212 + eio(ramp(t, 4.5, 1.0)) * 1496;
+    E.scan.style.left = px(scanX);
+    E.scan.style.opacity = (ramp(t, 4.45, 0.1) * (1 - ramp(t, 5.5, 0.15))).toFixed(3);
+    const decided = ramp(t, 5.5, 0.25);
+    tiles.forEach((tl, i) => {
+      const a = S(t - (4.0 + tl.delay), 16, 0.9);
+      const lit = t > 4.45 && t < 5.65 ? Math.max(0, 1 - Math.abs(scanX - tl.cx) / 170) : 0;
+      const w = WINNERS.indexOf(i);
+      const win = w >= 0 ? S(t - (5.0 + w * B / 2), 22, 0.85) : 0;
+      const base = w >= 0 ? 0.72 + 0.28 * clamp01(win) : 0.72 * (1 - 0.72 * decided);
+      tl.el.style.opacity = (clamp01(a) * clamp01(base + 0.28 * lit)).toFixed(3);
+      tl.el.style.transform = `scale(${(0.9 + 0.1 * a + 0.03 * clamp01(win)).toFixed(4)})`;
+      tl.ring.style.opacity = clamp01(win).toFixed(3);
+      if (tl.rank) { tl.rank.style.opacity = clamp01(win).toFixed(3); tl.rank.style.transform = `translateY(${((1 - clamp01(win)) * 8).toFixed(2)}px)`; }
+    });
+  }
+
+  /* --- bar 4: the key output as big type --- */
+  const bigOn = t >= 5.9 && t < 8.1;
+  show(E.bigType, bigOn);
+  if (bigOn) {
+    E.bigType.style.transform = `scale(${(1 + 0.035 * ramp(t, 6.0, BAR)).toFixed(4)})`;
+    E.bigLines.forEach((l, i) => {
+      const inn = S(t - (6.0 + i * B), 15, 0.9), out = S(t - (7.72 + i * 0.05), 16, 1);
+      l.style.transform = `translateY(${((1 - inn) * 105 - out * 105).toFixed(2)}%)`;
+      l.style.filter = inn < 0.98 ? `blur(${((1 - inn) * 8).toFixed(2)}px)` : 'none';
+    });
+  }
+
+  /* --- bar 5: 3D carousel with floor reflections, whip onto the hero --- */
+  const carOn = t >= 7.9 && t < 10.12;
+  show(E.carWrap, carOn);
+  if (carOn) {
+    E.carWrap.style.opacity = (ramp(t, 7.95, 0.25) * (1 - ramp(t, 9.97, 0.12))).toFixed(3);
+    const theta = t2 => {
+      const slow = 22 - 34 * (t2 - 8.0);
+      const at = 22 - 34 * (9.5 - 8.0);
+      return t2 < 9.5 ? slow : mix(at, -360, S(t2 - 9.5, 13, 0.97));
+    };
+    const th = theta(t), vel = (theta(t) - theta(t - 1 / 240)) * 240;
+    car.style.transform = `rotateX(-6deg) rotateY(${th.toFixed(3)}deg)`;
+    const blur = Math.min(14, Math.abs(vel) * 0.012);
+    cards.forEach(c => {
+      const face = Math.cos((c.a + th) * Math.PI / 180);
+      c.face.style.opacity = (0.3 + 0.7 * Math.max(0, face)).toFixed(3);
+      const f = blur > 0.3 ? `blur(${blur.toFixed(2)}px)` : 'none';
+      c.face.style.filter = f; c.refl.style.filter = f;
+    });
+  }
+
+  /* --- bar 6: match cut into the phone, panel flips into results --- */
+  const phoneOn = t >= 9.97 && t < 12.3;
+  show(E.phoneScene, phoneOn);
+  if (phoneOn) {
+    const m = S(t - 10.0, 11, 0.9);
+    const push = S(t - 12.0, 14, 1);
+    E.phoneScene.style.transform = `translateX(${(-push * 1500).toFixed(2)}px) scale(${(1 + 0.03 * ramp(t, 10.0, BAR)).toFixed(4)})`;
+    E.phoneScene.style.opacity = (1 - ramp(t, 12.0, 0.2)).toFixed(3);
+    const r = { x: mix(FRONT.x, SCREEN.x, m), y: mix(FRONT.y, SCREEN.y, m), w: mix(FRONT.w, SCREEN.w, m), h: mix(FRONT.h, SCREEN.h, m) };
+    const rad = mix(40, 52, m);
+    const sc = E.screen.style;
+    sc.left = px(r.x); sc.top = px(r.y); sc.width = px(r.w); sc.height = px(r.h); sc.borderRadius = px(rad);
+    const bz = E.bezel.style;
+    bz.left = px(r.x - 12); bz.top = px(r.y - 12); bz.width = px(r.w + 24); bz.height = px(r.h + 24); bz.borderRadius = px(rad + 12);
+    bz.opacity = ramp(t, 10.08, 0.3).toFixed(3);
+    const k = r.w / 390;
+    E.phoneFrame.style.transform = `scale(${k.toFixed(4)})`;
+    E.phoneFrame.style.top = px((r.h - 844 * k) / 2);
+    E.screenStill.style.opacity = (1 - ramp(t, 10.12, 0.14)).toFixed(3);
+    if (phoneReady) { try { E.phoneFrame.contentWindow.seek(3.25 + (t - 10.0)); } catch { /* not ready */ } }
+    const fin = S(t - 10.25, 13, 0.9);
+    E.flipWrap.style.opacity = clamp01(fin).toFixed(3);
+    E.flipWrap.style.transform = `translateX(${((1 - fin) * 80).toFixed(2)}px)`;
+    E.flip.style.transform = `rotateY(${(180 * S(t - 11.0, 12, 0.88)).toFixed(3)}deg)`;
+    resBars.forEach((b, i) => b.style.setProperty('--w', (RES_W[i] * 100 * eo(ramp(t, 11.3 + i * 0.08, 0.45))).toFixed(2) + '%'));
+  }
+
+  /* --- bar 7: big stats on push cuts --- */
+  const statsOn = t >= 11.95 && t < 14.3;
+  show(E.stats, statsOn);
+  if (statsOn) statEls.forEach((el, j) => {
+    const tj = 12.0 + j * B;
+    const inn = S(t - tj, 16, 0.92), out = j < 3 ? S(t - (tj + B), 16, 0.92) : S(t - 14.0, 16, 1);
+    const x = (1 - inn) * 1000 - out * 1000;
+    const on = inn > 0.001 && out < 0.999;
+    show(el, on);
+    if (!on) return;
+    el.style.transform = `translateX(${x.toFixed(2)}px) scale(${(0.94 + 0.06 * inn - 0.04 * out).toFixed(4)})`;
+    el.style.opacity = (clamp01(inn * 1.4) * (1 - clamp01(out * 1.4))).toFixed(3);
+  });
+
+  /* --- bar 8: 3-word ticker --- */
+  const tickOn = t >= 13.95 && t < 16.1;
+  show(E.ticker, tickOn);
+  if (tickOn) {
+    E.tickRow.style.transform = `translateX(${(260 - (t - 14.0) * 820).toFixed(2)}px)`;
+    E.ticker.style.opacity = (ramp(t, 14.0, 0.15) * (1 - ramp(t, 15.85, 0.18))).toFixed(3);
+  }
+
+  /* --- bar 9: logo reveal, bar 10: fade to black --- */
+  const logoOn = t >= 15.95;
+  show(E.logo, logoOn);
+  if (logoOn) {
+    const a = S(t - 16.0, 14, 0.9);
+    E.mark.style.transform = `scale(${(0.7 + 0.3 * a).toFixed(4)})`;
+    E.mark.style.opacity = clamp01(a * 1.5).toFixed(3);
+    E.mark.style.filter = a < 0.98 ? `blur(${((1 - a) * 10).toFixed(2)}px)` : 'none';
+    [[E.wordmark, 16.5], [E.tagline, 17.0]].forEach(([el, t0]) => {
+      const s = S(t - t0, 15, 0.9);
+      el.style.transform = `translateY(${((1 - s) * 105).toFixed(2)}%)`;
+      el.style.filter = s < 0.98 ? `blur(${((1 - s) * 8).toFixed(2)}px)` : 'none';
+    });
+    E.logo.style.transform = `scale(${(1 + 0.03 * ramp(t, 16.0, 2 * BAR)).toFixed(4)})`;
+  }
+  E.black.style.opacity = Math.max(eio(ramp(t, 18.4, 1.45)), 1 - ramp(t, 0, 0.3)).toFixed(3);
+
+  /* --- cursor (bars 2) --- */
+  const curOn = t >= 2.0 && t < 4.0;
+  show(E.cursor, curOn);
+  if (curOn) {
+    const [cx, cy] = curAt(t);
+    const press = S(t - beat(7), 34, 0.75) - S(t - (beat(7) + 0.1), 18, 0.9);
+    E.cursor.style.transform = `translate(${px(cx - 13.7)},${px(cy - 8)}) scale(${(1 - 0.16 * press).toFixed(4)})`;
+    E.cursor.style.opacity = (ramp(t, 2.02, 0.15) * (1 - ramp(t, 3.7, 0.2))).toFixed(3);
+  }
+  return t;
+}
+
+/* =====================================================================
+   Player: fit, visibility-driven playback, sound synced to the song
+   ===================================================================== */
+const params = new URLSearchParams(location.search);
+const RENDER = params.has('render');
+if (RENDER) document.documentElement.classList.add('render');
+
+function fit() {
+  const s = RENDER ? 1 : Math.min(innerWidth / 1920, innerHeight / 1080);
+  const f = E.frame.style;
+  f.width = px(1920 * s); f.height = px(1080 * s);
+  f.left = px((innerWidth - 1920 * s) / 2); f.top = px((innerHeight - 1080 * s) / 2);
+  E.stage.style.transform = `scale(${s})`;
+}
+addEventListener('resize', fit);
+fit();
+
+const imgs = [...document.images];
+window.seek = seek;
+window.LOOP = P;
+window.ready = document.fonts.ready
+  .then(() => Promise.all(['500 20px Geist', '600 20px Geist'].map(f => document.fonts.load(f))))
+  .then(() => Promise.all(imgs.map(i => i.decode().catch(() => {}))))
+  .then(() => new Promise(res => {
+    const done = () => { phoneReady = !!(E.phoneFrame.contentWindow && E.phoneFrame.contentWindow.seek); res(); };
+    try { if (E.phoneFrame.contentWindow.seek) return done(); } catch { /* loading */ }
+    E.phoneFrame.addEventListener('load', () => (E.phoneFrame.contentWindow.ready || Promise.resolve()).then(done), { once: true });
+    setTimeout(done, 4000);
+  }))
+  .then(() => { measure(); seek(Number(params.get('t')) || 0); });
+
+/* ruler: 40 beats, bars as majors */
+const ruler = $('ruler'), head = $('rulerHead');
+for (let i = 0; i <= 40; i++) {
+  const tick = document.createElement('i');
+  if (i % 4 === 0) tick.className = 'bar';
+  tick.style.left = `calc(14px + (100% - 28px) * ${i / 40})`;
+  ruler.insertBefore(tick, head);
+}
+
+/* audio: one site-wide owner at a time (shared with the dashboard) */
+const audio = new Audio('audio/island-breeze-cut.mp3');
+audio.preload = 'auto';
+audio.loop = true;
+window.filmAudio = audio; // handy for testing
+const bus = (() => { try { return (window.parent !== window && window.parent.SiteAudio) || window.SiteAudio || null; } catch { return window.SiteAudio || null; } })();
+const soundBtn = $('sound'), soundLabel = $('soundLabel');
+let soundOn = false, visible = RENDER, clock0 = performance.now() / 1000, lastT = 0;
+function setSound(on) {
+  soundOn = on;
+  soundBtn.setAttribute('aria-pressed', String(on));
+  soundLabel.textContent = on ? 'Sound on' : 'Sound off';
+  if (on) {
+    audio.currentTime = filmTime();
+    audio.play().catch(() => setSound(false));
+    if (bus) bus.claim('film', () => setSound(false));
+  } else {
+    audio.pause();
+    if (bus) bus.release('film');
+  }
+}
+function filmTime() {
+  if (soundOn && !audio.paused) return audio.currentTime;
+  return ((performance.now() / 1000 - clock0) % P + P) % P;
+}
+soundBtn.addEventListener('click', () => setSound(!soundOn));
+
+// start from the top each time the film scrolls into view; stop (and silence) when it leaves
+new IntersectionObserver(([e]) => {
+  const was = visible;
+  visible = e.isIntersecting && e.intersectionRatio > 0.4;
+  if (visible && !was) {
+    clock0 = performance.now() / 1000;
+    if (soundOn) { audio.currentTime = 0; audio.play().catch(() => setSound(false)); if (bus) bus.claim('film', () => setSound(false)); }
+  } else if (!visible && was) {
+    audio.pause();
+  }
+}, { threshold: [0, 0.4, 0.6] }).observe(document.body);
+
+/* quiet UI sounds under the music: typing ticks + the click */
+let actx = null, nbuf = null;
+const SFX = [...TYPED.split('').map((_, i) => [2.25 + i * B / 8, 'key']), [beat(7), 'click']];
+function blip(kind) {
+  if (!actx) { try { actx = new AudioContext(); } catch { return; } }
+  if (!nbuf) { nbuf = actx.createBuffer(1, actx.sampleRate * 0.04, actx.sampleRate); const c = nbuf.getChannelData(0); for (let i = 0; i < c.length; i++) c[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / c.length, 4); }
+  const s = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
+  s.buffer = nbuf; f.type = 'bandpass'; f.frequency.value = kind === 'key' ? 4200 : 2600; f.Q.value = 4;
+  g.gain.value = kind === 'key' ? 0.08 : 0.16;
+  s.connect(f); f.connect(g); g.connect(actx.destination); s.start();
+}
+
+function frame() {
+  if (visible) {
+    const t = seek(filmTime());
+    if (soundOn && !audio.paused) {
+      const wrapped = t < lastT;
+      for (const [et, k] of SFX) if (wrapped ? (et > lastT || et <= t) : (et > lastT && et <= t)) blip(k);
+    }
+    lastT = t;
+    head.style.left = `calc(14px + (100% - 28px) * ${(t / P).toFixed(4)})`;
+  }
+  requestAnimationFrame(frame);
+}
+if (!RENDER) window.ready.then(() => requestAnimationFrame(frame));
+</script>
+</body>
+</html>

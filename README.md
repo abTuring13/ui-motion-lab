@@ -1,12 +1,13 @@
 # UI Motion Lab
 
-Two small motion pieces. Both are plain HTML files with no build step: open them in a browser.
+Motion pieces written in code. Each one is a plain HTML file with no build step, and the showcase page at https://abturing13.github.io/ui-motion-lab/ puts them all in one scroll. A tick rail on the right shows where you are: drag it to scrub the page, or click a marker to jump to a section. Only one thing plays audio at a time, and music stops when you scroll away from it.
 
 | Page | What it is |
 | --- | --- |
 | [`morph/`](morph/index.html) | **Morph Loop.** One shape moves through 12 UI states at 120 BPM over 7 bars (a 14 s loop). A cursor drives the changes with clicks and drags. |
 | [`dashboard/`](dashboard/index.html) | **Motion Dashboard.** The same components, driven by you. The music player streams real tracks with a live visualizer, and you can scrub, skip, and drag the volume past max to stretch it. It also has liquid tabs that morph the chart, a hover tooltip, liquid toggles, a Deploy button that goes button → loader → check → toast, and a ⌘K palette whose commands work. |
-| [`share-button/`](share-button/index.html) | **Cursor Share Button.** A glowing orange orb follows your pointer inside the button, and the label rolls over. This is a plain HTML/CSS port of [`CursorFollowShareButton.tsx`](share-button/CursorFollowShareButton.tsx), which is kept as the original React + Tailwind version. |
+| [`film/`](film/index.html) | **Launch Film.** 10 bars at 120 BPM, with every frame computed from time in `seek(t)`. The hook words land on the beats, one word morphs into a prompt, and a cursor types and clicks. On the drop, a circle opens out of the button into a dark scene: a wall of real component captures with a scan line and 3 winners, big type, a 3D carousel with floor reflections and a whip, a match cut into a phone running the live morph loop next to a panel that flips into results, stats on push cuts, a ticker, a logo reveal and a fade to black. With sound on, the film's clock is the song itself. |
+| [`share-button/`](share-button/index.html) | **Cursor Share Button.** A black orb trails your pointer on a spring inside a white pill. The label uses difference blending, so it stays readable over the orb. Clicking opens the orb into a circle that fills the button and copies the link. [`CursorFollowShareButton.tsx`](share-button/CursorFollowShareButton.tsx) is the same design in React + Tailwind. |
 
 ## Morph Loop
 
@@ -45,6 +46,8 @@ node render/render.mjs --mux-only             # re-encode without re-capturing t
 The full render captures 4 subframes per frame and blends them with ffmpeg `tmix`. That gives motion blur at 60 fps, written to `out/morph-loop.mp4`. Pass `--offset` to start the song on a downbeat.
 
 ## Music credits
+
+The launch film uses a 10-bar cut of "Island Breeze" by Surf House Productions (https://surf-house-productions.bandcamp.com). I analysed it with numpy: 120.01 BPM, with the beat grid locked to 172 kick hits and the drop landing on bar 3. The cut is loudness-normalised to -14 LUFS.
 
 The dashboard player uses these tracks, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) and re-encoded to 128 kbps:
 

@@ -141,7 +141,7 @@
     </div>
 
     <p class="db-credits">Music (CC BY 4.0, re-encoded to 128 kbps):
-      “Ethereal Pulse” by <a href="https://surf-house-productions.bandcamp.com" target="_blank" rel="noopener">Surf House Productions</a>,
+      “Ethereal Pulse” and “Island Breeze” (launch film) by <a href="https://surf-house-productions.bandcamp.com" target="_blank" rel="noopener">Surf House Productions</a>,
       “Afterglow Love” and “Rush Hour” by <a href="https://www.escp.space" target="_blank" rel="noopener">| e s c p |</a> —
       royalty free music via <a href="https://www.free-stock-music.com" target="_blank" rel="noopener">free-stock-music.com</a>,
       licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.</p>
@@ -224,6 +224,19 @@
   const toggleMute = () => { muted = !muted; applyVolume(); renderVol(); };
 
   audio.addEventListener('play', syncPlaying);
+  // one audio owner per page: playing here silences the launch film (and vice versa)
+  audio.addEventListener('play', () => { if (window.SiteAudio) window.SiteAudio.claim('dashboard', () => audio.pause()); });
+  audio.addEventListener('pause', () => { if (window.SiteAudio) window.SiteAudio.release('dashboard'); });
+  function fadeOutAndPause() {
+    if (audio.paused) return;
+    const from = muted ? 0 : volume, t0 = performance.now();
+    const step = () => {
+      const k = Math.min(1, (performance.now() - t0) / 400), v = from * (1 - k) * (1 - k);
+      if (gain) gain.gain.value = v; else audio.volume = v;
+      if (k < 1) requestAnimationFrame(step); else { audio.pause(); applyVolume(); }
+    };
+    step();
+  }
   audio.addEventListener('pause', syncPlaying);
   audio.addEventListener('ended', () => loadTrack(trackIdx + 1, true));
   if ('mediaSession' in navigator) {
@@ -644,7 +657,8 @@
   new ResizeObserver(() => { layoutChart(); selectTab(tabIdx, true); }).observe(E.plot);
   new IntersectionObserver(([e]) => {
     visible = e.isIntersecting;
-    if (visible && !revealed && W) { revealed = true; reveal.to(W + 24); valS.to(DATASETS[dsIdx].total); }
-  }, { threshold: 0.25 }).observe(mount);
+    if (!visible) fadeOutAndPause();                     // music stops once you scroll away
+    if (e.intersectionRatio >= 0.25 && !revealed && W) { revealed = true; reveal.to(W + 24); valS.to(DATASETS[dsIdx].total); }
+  }, { threshold: [0, 0.25] }).observe(mount);
   requestAnimationFrame(frame);
 })();
