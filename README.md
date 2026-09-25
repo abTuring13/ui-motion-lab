@@ -36,7 +36,9 @@ npm install                                   # playwright-core only; uses your 
 npm run beats                                 # one PNG per beat → render/beats/ (check the grid)
 node render/render.mjs --at 3.3,9.8           # any specific times
 brew install ffmpeg                           # needed for the full render
-node render/render.mjs --song song.mp3 --offset 0.42 --loops 2
+node render/render.mjs                        # MP4 with a synthesized kick + UI-click track
+node render/render.mjs --song song.mp3 --offset 0.42 --loops 2   # or use a real song instead
+node render/render.mjs --mux-only             # re-encode without re-capturing the frames
 ```
 
 The full render captures 4 subframes per frame and blends them with ffmpeg `tmix`. That gives motion blur at 60 fps, written to `out/morph-loop.mp4`. Pass `--offset` to start the song on a downbeat.

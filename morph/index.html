@@ -822,6 +822,7 @@ const EVENTS = [
   [12.5, 'key'], [12.625, 'key'], [12.75, 'key'], [13.0, 'key'], [13.06, 'pop'],
 ];
 for (let b = 0; b < P / BEAT; b++) EVENTS.push([b * BEAT, 'kick']);
+window.EVENTS = EVENTS; // the render script turns these into the MP4's audio track
 let actx = null, soundOn = false, noise = null;
 soundBtn.onclick = () => {
   soundOn = !soundOn;
