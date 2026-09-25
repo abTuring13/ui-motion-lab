@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-  :root { --bg: #0b0b0b; --paper: #ffffff; --ink: #111111; --dim: #6d6f78; }
+  :root { --bg: #0b0b0b; --paper: #ffffff; --ink: #111111; --dim: #6d6f78; --k: 1; }
   html.embed { --bg: #000; }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
@@ -17,40 +17,40 @@
     font-family: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased;
     display: grid; place-items: center; padding: 16px;
   }
-  main { display: grid; justify-items: center; gap: 26px; }
-  p { margin: 0; font-size: 14px; color: var(--dim); letter-spacing: -.01em; }
+  main { display: grid; justify-items: center; gap: calc(26px * var(--k)); }
+  p { margin: 0; font-size: calc(14px * min(var(--k), 1.4)); color: var(--dim); letter-spacing: -.01em; }
 
   /* white pill; the black orb trails the pointer on a spring */
   .share {
     position: relative; isolation: isolate; overflow: hidden;
     display: grid; place-items: center;
-    width: min(224px, calc(100vw - 40px)); height: 64px;
+    width: calc(224px * var(--k)); height: calc(64px * var(--k));
     border: 0; border-radius: 999px; padding: 0; cursor: pointer;
     background: var(--paper); color: var(--ink);
-    font: 500 18px/1 "Geist", ui-sans-serif, system-ui, sans-serif; letter-spacing: -.02em;
-    box-shadow: 0 1px 2px rgba(0,0,0,.2), 0 18px 40px -20px rgba(255,255,255,.18);
+    font: 500 calc(18px * var(--k))/1 "Geist", ui-sans-serif, system-ui, sans-serif; letter-spacing: -.02em;
+    box-shadow: 0 1px 2px rgba(0,0,0,.2), 0 calc(18px * var(--k)) calc(40px * var(--k)) calc(-20px * var(--k)) rgba(255,255,255,.18);
     -webkit-tap-highlight-color: transparent;
   }
-  .share:focus-visible { outline: 2px solid var(--paper); outline-offset: 6px; }
+  .share:focus-visible { outline: 2px solid var(--paper); outline-offset: calc(6px * var(--k)); }
   .share::after { content: ""; position: absolute; inset: 0; z-index: 2; border-radius: inherit; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); opacity: 0; transition: opacity .3s ease; pointer-events: none; }
   .share.copied::after { opacity: 1; }
   .orb {
-    position: absolute; left: 0; top: 0; z-index: 0; width: 40px; height: 40px; margin: -20px 0 0 -20px;
+    position: absolute; left: 0; top: 0; z-index: 0; width: calc(40px * var(--k)); height: calc(40px * var(--k)); margin: calc(-20px * var(--k)) 0 0 calc(-20px * var(--k));
     border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center;
     pointer-events: none; transform: scale(0);
   }
-  .orb svg { width: 18px; height: 18px; }
+  .orb svg { width: calc(18px * var(--k)); height: calc(18px * var(--k)); }
   .ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
   /* labels use difference blending: black on white, white where the orb passes under */
   .label, .done { position: relative; z-index: 1; grid-area: 1 / 1; color: #fff; mix-blend-mode: difference; pointer-events: none; }
-  .label { display: grid; height: 24px; overflow: hidden; }
-  .label span { grid-area: 1 / 1; line-height: 24px; white-space: nowrap; transition: transform .45s cubic-bezier(.2,.9,.3,1), opacity .2s ease; }
+  .label { display: grid; height: calc(24px * var(--k)); overflow: hidden; }
+  .label span { grid-area: 1 / 1; line-height: calc(24px * var(--k)); white-space: nowrap; transition: transform .45s cubic-bezier(.2,.9,.3,1), opacity .2s ease; }
   .label span + span { transform: translateY(110%); opacity: 0; }
   .share.hover .label span:first-child { transform: translateY(-110%); opacity: 0; }
   .share.hover .label span + span { transform: none; opacity: 1; }
-  .done { display: flex; align-items: center; gap: 8px; opacity: 0; transform: translateY(8px); filter: blur(4px); transition: opacity .2s ease, transform .35s cubic-bezier(.2,.9,.3,1), filter .2s ease; }
-  .done svg { width: 18px; height: 18px; }
+  .done { display: flex; align-items: center; gap: calc(8px * var(--k)); opacity: 0; transform: translateY(8px); filter: blur(4px); transition: opacity .2s ease, transform .35s cubic-bezier(.2,.9,.3,1), filter .2s ease; }
+  .done svg { width: calc(18px * var(--k)); height: calc(18px * var(--k)); }
   .share.copied .label { opacity: 0; transition: opacity .12s ease; }
   .share.copied .done { opacity: 1; transform: none; filter: none; transition-delay: .08s; }
 </style>
@@ -65,14 +65,23 @@
   <p id="hint">Hover, then click to copy the link</p>
 </main>
 <script>
-  if (new URLSearchParams(location.search).has('embed')) document.documentElement.classList.add('embed');
+  const EMBED = new URLSearchParams(location.search).has('embed');
+  if (EMBED) document.documentElement.classList.add('embed');
+  // on the showcase page the button is the finale: scale everything up (about 2.4x), within the viewport
+  let K = 1;
+  function sizeUp() {
+    K = EMBED ? Math.max(1, Math.min(2.4, (innerWidth - 48) / 224, (innerHeight - 160) / 64 / 2.2)) : Math.min(1, (innerWidth - 40) / 224);
+    document.documentElement.style.setProperty('--k', K.toFixed(3));
+  }
+  sizeUp();
+  addEventListener('resize', sizeUp);
 
   const btn = document.getElementById('share'), orb = document.getElementById('orb'), icon = orb.firstElementChild;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // tiny spring: x follows t (k = stiffness, c = damping)
   const spring = (x, k, c) => ({ x, v: 0, t: x, k, c });
-  const X = spring(112, 320, 30), Y = spring(32, 320, 30), Sc = spring(0, 420, 32);
+  const X = spring(112 * K, 320, 30), Y = spring(32 * K, 320, 30), Sc = spring(0, 420, 32);
   const springs = [X, Y, Sc];
   let hovering = false, copiedTimer = 0;
 
@@ -99,7 +108,7 @@
     // the circle opens out of the orb and fills the button
     const r = btn.getBoundingClientRect();
     const far = Math.max(Math.hypot(X.t, Y.t), Math.hypot(r.width - X.t, Y.t), Math.hypot(X.t, r.height - Y.t), Math.hypot(r.width - X.t, r.height - Y.t));
-    Sc.t = (far + 4) / 20;
+    Sc.t = (far + 4) / (20 * K);
     btn.classList.add('copied');
     btn.setAttribute('aria-label', 'Link copied');
     try { await navigator.clipboard.writeText(shareUrl()); } catch { /* clipboard blocked: the feedback still plays */ }
@@ -118,7 +127,7 @@
       if (reduce) { s.x = s.t; s.v = 0; continue; }
       for (let i = 0; i < n; i++) { s.v += (-s.k * (s.x - s.t) - s.c * s.v) * (dt / n); s.x += s.v * (dt / n); }
     }
-    orb.style.transform = `translate(${X.x.toFixed(2)}px, ${(Y.x - 12).toFixed(2)}px) scale(${Math.max(0, Sc.x).toFixed(4)})`;
+    orb.style.transform = `translate(${X.x.toFixed(2)}px, ${(Y.x - 12 * K).toFixed(2)}px) scale(${Math.max(0, Sc.x).toFixed(4)})`;
     icon.style.opacity = Math.max(0, 1 - (Sc.x - 1) * 1.5).toFixed(3);   // the icon melts away as the orb grows
     requestAnimationFrame(frame);
   }

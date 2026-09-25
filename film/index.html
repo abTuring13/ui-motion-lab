@@ -11,14 +11,17 @@
   :root { --ink: #111111; --night: #0b0b0b; --muted: #767676; --soft: #f3f1ed; }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
-  body { background: #000; overflow: hidden; font-family: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
-  #frame { position: absolute; overflow: hidden; }
-  #stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; overflow: hidden; background: var(--night); }
-  .full { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
-  .mask { display: inline-block; overflow: hidden; vertical-align: top; padding: 0 .04em .1em; margin: 0 -.04em -.1em; }
-  .mask > span { display: inline-block; }
+  body { background: var(--night); overflow: hidden; font-family: "Geist", ui-sans-serif, system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
 
-  /* scene 1: white, hook + prompt pill */
+  /* the stage always fills the viewport; content lives in a centred 1920×1080 safe box */
+  #stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; overflow: hidden; background: var(--night); }
+  .bleed { position: absolute; inset: 0; }
+  .safe { position: absolute; width: 1920px; height: 1080px; }
+  .cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; }
+  .mask { display: inline-block; overflow: hidden; vertical-align: top; padding: 0 .04em .1em; margin: 0 -.04em -.1em; }
+  .mask > span, .ch { display: inline-block; }
+
+  /* white scene */
   #white { background: #fff; }
   #hook { display: flex; align-items: center; justify-content: center; gap: .24em; font-size: 150px; font-weight: 600; letter-spacing: -.055em; line-height: 1.08; color: var(--ink); }
   #pill { position: absolute; overflow: hidden; background: var(--soft); }
@@ -29,13 +32,13 @@
   #gen { width: 260px; height: 100px; border-radius: 50px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 32px; font-weight: 500; letter-spacing: -.02em; flex: none; }
   #gen svg { width: 30px; height: 30px; }
   .ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  #cursor { position: absolute; left: 0; top: 0; width: 64px; height: 64px; transform-origin: 13.7px 8px; filter: drop-shadow(0 3px 4px rgba(0,0,0,.22)); }
 
   /* dark scene */
   #dark { background: var(--night); color: #fff; }
-  .scene { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 960px 540px; }
   #wall .tile { position: absolute; width: 280px; height: 280px; border-radius: 22px; overflow: hidden; background: #161616; }
   .tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .tile .ring { position: absolute; inset: 0; border-radius: 22px; box-shadow: inset 0 0 0 3px #fff; }
+  .tile .ring { position: absolute; inset: 0; border-radius: 22px; box-shadow: inset 0 0 0 3px #fff; opacity: 0; }
   .tile .rank { position: absolute; left: 14px; top: 14px; background: #fff; color: var(--ink); border-radius: 999px; padding: 5px 11px; font-size: 18px; font-weight: 600; letter-spacing: -.01em; }
   #scan { position: absolute; top: 72px; width: 2px; height: 936px; background: #fff; }
   #bigType { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 170px; font-weight: 600; letter-spacing: -.055em; line-height: 1.02; }
@@ -63,59 +66,67 @@
   .res b { font-size: 34px; color: #fff; font-weight: 600; letter-spacing: -.03em; }
   .res i { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: #262626; position: relative; overflow: hidden; }
   .res i::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: var(--w, 0%); background: #fff; border-radius: 3px; }
-  .stat { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .stat { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: flex; flex-direction: column; align-items: center; justify-content: center; transform-origin: 960px 540px; }
   .stat b { font-size: 300px; font-weight: 600; letter-spacing: -.06em; line-height: .95; font-variant-numeric: tabular-nums; }
   .stat span { font-size: 48px; color: var(--muted); letter-spacing: -.03em; margin-top: 18px; }
-  #ticker { overflow: hidden; }
-  #tickRow { position: absolute; left: 0; top: 380px; white-space: nowrap; font-size: 240px; font-weight: 600; letter-spacing: -.06em; line-height: 1.1; }
-  #tickRow i { font-style: normal; color: #3a3a3a; margin: 0 .22em; }
+  .tick-row { position: absolute; left: 0; white-space: nowrap; font-size: 230px; font-weight: 600; letter-spacing: -.06em; line-height: 1.1; }
+  .tick-row i { font-style: normal; color: #3a3a3a; margin: 0 .22em; }
+  #row2 { color: #3f3f3f; }
+  #row2 i { color: #222; }
   #logo { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  #mark { width: 150px; height: 150px; border-radius: 44px; background: #fff; display: grid; place-items: center; }
+  #mark { width: 150px; height: 150px; border-radius: 44px; background: #fff; display: grid; place-items: center; flex: none; }
   #mark::after { content: ""; width: 56px; height: 56px; border-radius: 50%; background: var(--night); }
   #wordmark { margin-top: 56px; font-size: 120px; font-weight: 600; letter-spacing: -.055em; line-height: 1.05; }
   #tagline { margin-top: 18px; font-size: 40px; color: var(--muted); letter-spacing: -.03em; }
-  #cursor { position: absolute; left: 0; top: 0; width: 64px; height: 64px; transform-origin: 13.7px 8px; filter: drop-shadow(0 3px 4px rgba(0,0,0,.22)); }
   #black { background: #000; pointer-events: none; }
 
-  /* ---------- overlay UI ---------- */
-  #ui { position: absolute; left: 0; right: 0; bottom: 18px; display: flex; align-items: center; justify-content: center; gap: 14px; padding: 0 16px; pointer-events: none; }
-  #ui > * { pointer-events: auto; }
-  #sound {
-    height: 36px; padding: 0 14px 0 11px; border-radius: 18px; border: 0; cursor: pointer;
-    background: rgba(24,24,24,.86); color: #ededed; font: 500 13px "Geist", ui-sans-serif, system-ui, sans-serif;
-    display: flex; align-items: center; gap: 8px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  /* ---------- player bar: play/pause, time, beat-grid seek bar, sound ---------- */
+  #ui {
+    position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; align-items: center; gap: 4px;
+    height: 44px; padding: 0 5px; border-radius: 22px; max-width: calc(100vw - 24px);
+    background: rgba(20,20,20,.86); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 14px 34px -14px rgba(0,0,0,.6);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #ededed; font: 500 13px "Geist", ui-sans-serif, system-ui, sans-serif;
+    user-select: none;
   }
-  #sound:hover { background: rgba(36,36,36,.9); }
-  #sound:focus-visible { outline: 2px solid #ededed; outline-offset: 2px; }
-  #sound svg { width: 16px; height: 16px; }
+  #ui button { height: 34px; min-width: 34px; border: 0; border-radius: 17px; background: none; color: inherit; font: inherit; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 0 10px; }
+  #ui button:hover { background: rgba(255,255,255,.08); }
+  #ui button:focus-visible, #scrub:focus-visible { outline: 2px solid #ededed; outline-offset: 1px; }
+  #ui svg { width: 16px; height: 16px; }
+  #playBtn { padding: 0; }
+  #time { min-width: 92px; text-align: center; font-variant-numeric: tabular-nums; color: #bdbdbd; }
+  #time b { color: #fff; font-weight: 500; }
+  #scrub { position: relative; height: 34px; width: min(420px, 44vw); cursor: pointer; touch-action: none; border-radius: 8px; }
+  #scrub i { position: absolute; top: 50%; width: 1.5px; height: 8px; margin: -4px 0 0 -.75px; border-radius: 1px; background: #4a4a4a; }
+  #scrub i.bar { height: 14px; margin-top: -7px; background: #7a7a7a; }
+  #scrub i.past { background: #9a9a9a; }
+  #scrub i.bar.past { background: #d0d0d0; }
+  #scrub b { position: absolute; top: 50%; width: 3px; height: 24px; margin: -12px 0 0 -1.5px; border-radius: 2px; background: #fff; }
   #sound .mx { display: none; }
   #sound[aria-pressed="false"] .mx { display: inline; }
   #sound[aria-pressed="false"] .w { display: none; }
-  #ruler { position: relative; height: 36px; width: min(420px, 60vw); border-radius: 18px; background: rgba(24,24,24,.86); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
-  #ruler i { position: absolute; top: 50%; width: 1.5px; height: 8px; margin: -4px 0 0 -.75px; border-radius: 1px; background: #4a4a4a; }
-  #ruler i.bar { height: 14px; margin-top: -7px; background: #7a7a7a; }
-  #ruler b { position: absolute; top: 50%; width: 2.5px; height: 22px; margin: -11px 0 0 -1.25px; border-radius: 2px; background: #fff; }
+  @media (max-width: 560px) { #time { display: none; } #soundLabel { display: none; } }
   html.render #ui { display: none; }
 </style>
 </head>
 <body>
-<div id="frame"><div id="stage">
-  <div class="full" id="white"></div>
-  <div class="full" id="hook">
-    <span class="mask"><span>Motion</span></span><span class="mask"><span>made</span></span><span class="mask"><span>of</span></span><span class="mask" id="codeWord"><span>code</span></span>
-  </div>
-  <div id="pill"><div id="pillIn">
-    <div id="pillQ"><span id="pillText"></span><i id="caret"></i><span id="pillPh">Describe the motion</span></div>
-    <div id="gen"><span>Generate</span><svg class="ico" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+<div id="stage">
+  <div class="bleed" id="white"></div>
+  <div class="safe" id="wsafe"><div class="cam" id="wcam">
+    <div class="cam" id="hook">
+      <span class="mask"><span>Motion</span></span><span class="mask"><span>made</span></span><span class="mask"><span>of</span></span><span class="mask" id="codeWord"><span>code</span></span>
+    </div>
+    <div id="pill"><div id="pillIn">
+      <div id="pillQ"><span id="pillText"></span><i id="caret"></i><span id="pillPh">Describe the motion</span></div>
+      <div id="gen"><span>Generate</span><svg class="ico" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+    </div></div>
+    <svg id="cursor" viewBox="0 0 28 28"><path d="M6 3.5v18.2l4.6-4.3 3 6.9 3.1-1.3-3-6.8h6.3z" fill="#111" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
   </div></div>
 
-  <div class="full" id="dark">
-    <div class="scene" id="wall"></div>
-    <div id="scan"></div>
-    <div class="scene" id="bigType"><span class="mask"><span>One shape</span></span><span class="mask l2"><span>twelve states</span></span></div>
-    <div class="scene" id="carWrap"><div id="car"></div></div>
-    <div class="scene" id="phoneScene">
+  <div class="bleed" id="dark"><div class="safe" id="dsafe">
+    <div class="cam" id="wall"><div id="scan"></div></div>
+    <div class="cam" id="bigType"><span class="mask l1"><span>One shape</span></span><span class="mask l2"><span>twelve states</span></span></div>
+    <div class="cam" id="carWrap"><div id="car"></div></div>
+    <div class="cam" id="phoneScene">
       <div id="bezel"></div>
       <div id="screen"><iframe id="phoneFrame" title="Live morph loop" tabindex="-1" src="../morph/?embed&manual"></iframe><img id="screenStill" alt="" src="clips/morph-05.jpg"></div>
       <div id="flipWrap"><div id="flip">
@@ -137,28 +148,29 @@
         </div>
       </div></div>
     </div>
-    <div class="scene" id="stats"></div>
-    <div class="scene" id="ticker"><div id="tickRow"></div></div>
-    <div class="scene" id="logo"><div id="mark"></div><span class="mask" id="wordmark"><span>UI Motion Lab</span></span><span class="mask" id="tagline"><span>Motion made of code</span></span></div>
-  </div>
-
-  <svg id="cursor" viewBox="0 0 28 28"><path d="M6 3.5v18.2l4.6-4.3 3 6.9 3.1-1.3-3-6.8h6.3z" fill="#111" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>
-  <div class="full" id="black"></div>
-</div></div>
+    <div class="cam" id="stats"></div>
+    <div class="cam" id="ticker"><div class="tick-row" id="row1"></div><div class="tick-row" id="row2"></div></div>
+    <div class="cam" id="logo"><div id="mark"></div><span class="mask" id="wordmark"><span>UI Motion Lab</span></span><span class="mask" id="tagline"><span>Motion made of code</span></span></div>
+  </div></div>
+  <div class="bleed" id="black"></div>
+</div>
 
 <div id="ui">
+  <button id="playBtn" aria-label="Pause"></button>
+  <span id="time"><b>0:00.0</b> / 0:20.0</span>
+  <div id="scrub" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="20"><b id="head"></b></div>
   <button id="sound" aria-pressed="false" aria-label="Sound">
     <svg class="ico" viewBox="0 0 24 24"><path d="M11 5 6.5 9H3.5v6h3l4.5 4z"/><path class="w" d="M15.5 9a4 4 0 0 1 0 6"/><path class="w" d="M18.5 6.5a8 8 0 0 1 0 11"/><path class="mx" d="m16 9.5 5 5m0-5-5 5"/></svg>
     <span id="soundLabel">Sound off</span>
   </button>
-  <div id="ruler" aria-hidden="true"><b id="rulerHead"></b></div>
 </div>
 
 <script>
 /* =====================================================================
-   Launch film: 10 bars at 120 BPM, every style computed from t in seek(t).
-   Song: "Island Breeze" (Surf House Productions, CC BY 4.0), cut so the drop
-   (measured with numpy: 120.01 BPM, grid locked to 172 kicks) lands on bar 3.
+   Launch film v2: 10 bars at 120 BPM. Every style is computed from t in seek(t).
+   A spring-driven camera (zoom in log space, focus point, roll) per scene, beat-synced
+   zoom pulses after the drop, and motion blur from camera speed.
+   Audio: film/audio/film-mix.mp3 (music bed + sound design, built by film/tools/make_audio.py).
    ===================================================================== */
 const BPM = 120.01, B = 60 / BPM, BAR = 4 * B, P = 40 * B;
 
@@ -177,13 +189,55 @@ function S(dt, w = 16, z = 0.9) {            // closed-form spring step, 0 → 1
 const px = n => n.toFixed(2) + 'px';
 const $ = id => document.getElementById(id);
 const show = (el, on) => { const d = on ? '' : 'none'; if (el.style.display !== d) el.style.display = d; };
-const beat = n => n * B;
+
+/* ---------- camera ---------- */
+// one step per key: a spring by default, or an ease-in push ({ ease: 'in', d })
+const STEP = (dt, o) => (o.ease === 'in' ? ei(clamp01(dt / o.d)) : S(dt, o.w ?? 10, o.z ?? 0.92));
+function track(init, keys) {
+  let prev = init;
+  const st = keys.map(([t, v, o = {}]) => { const d = v - prev; prev = v; return { t, d, o }; });
+  return t => { let v = init; for (const k of st) v += k.d * STEP(t - k.t, k.o); return v; };
+}
+function camera(init, keys) {             // keys: [t, { z, x, y, r }, opts]; zoom interpolates in log space
+  const f = {};
+  for (const p of ['z', 'x', 'y', 'r']) {
+    const conv = p === 'z' ? Math.log : v => v;
+    f[p] = track(conv(init[p]), keys.filter(k => k[1][p] !== undefined).map(k => [k[0], conv(k[1][p]), k[2]]));
+  }
+  return t => ({ z: Math.exp(f.z(t)), x: f.x(t), y: f.y(t), r: f.r(t) });
+}
+// zoom kick on every beat after the drop (bigger on downbeats), decays fast: energy, not shake
+function pulse(t) {
+  if (t < 4.0 || t > 18.2) return 1;
+  const k = Math.floor((t + 1e-6) / B), dt = t - k * B;
+  return 1 + (k % 4 === 0 ? 0.022 : 0.01) * Math.exp(-dt * 9);
+}
+function camCss(c, extra = '') {
+  return `translate(960px,540px) ${extra} rotate(${c.r.toFixed(3)}deg) scale(${c.z.toFixed(5)}) translate(${(-c.x).toFixed(2)}px,${(-c.y).toFixed(2)}px)`;
+}
+function camBlur(fn, t) {                  // motion blur from how far the camera moved in 1/60 s
+  const a = fn(t), b = fn(t - 1 / 60);
+  return Math.min(16, Math.abs(Math.log(a.z / b.z)) * 240 + Math.hypot(a.x - b.x, a.y - b.y) * a.z * 0.1);
+}
+function applyCam(el, fn, t, { pulsed = false, extra = '', blur = true } = {}) {
+  const c = fn(t);
+  if (pulsed) c.z *= pulse(t);
+  el.style.transform = camCss(c, extra);
+  const bl = blur ? camBlur(fn, t) : 0;
+  el.style.filter = bl > 0.4 ? `blur(${bl.toFixed(2)}px)` : 'none';
+  return c;
+}
+const project = (c, x, y) => {             // scene → safe-box screen coords
+  const r = c.r * Math.PI / 180, dx = (x - c.x) * c.z, dy = (y - c.y) * c.z;
+  return [960 + dx * Math.cos(r) - dy * Math.sin(r), 540 + dx * Math.sin(r) + dy * Math.cos(r)];
+};
+const unproject = (c, x, y) => [c.x + (x - 960) / c.z, c.y + (y - 540) / c.z];   // (no roll needed where used)
 
 /* ---------- footage: stills of our own components ---------- */
 const WALL = ['morph-01', 'morph-04', 'dash-chart', 'morph-06', 'morph-02',
               'morph-08', 'dash-player', 'morph-10', 'morph-09', 'morph-12',
               'morph-03', 'morph-11', 'dash-palette', 'morph-07', 'morph-05'];
-const WINNERS = [6, 8, 11];                 // dash-player, chart, palette
+const WINNERS = [6, 8, 11];
 const CARDS = ['morph-05', 'morph-09', 'dash-chart', 'morph-04', 'morph-11', 'dash-player', 'morph-06', 'morph-08'];
 const STATS = [['0', 'keyframes'], ['840', 'frames rendered'], ['120', 'beats per minute'], ['1', 'HTML file']];
 const TYPED = 'make it move';
@@ -192,14 +246,14 @@ const wall = $('wall');
 const tiles = WALL.map((name, i) => {
   const d = document.createElement('div');
   d.className = 'tile';
-  const col = i % 5, row = Math.floor(i / 5);
-  const x = 212 + col * 304, y = 96 + row * 304;
+  const col = i % 5, row = Math.floor(i / 5), x = 212 + col * 304, y = 96 + row * 304;
   d.style.left = x + 'px'; d.style.top = y + 'px';
   d.innerHTML = `<img alt="" src="clips/${name}.jpg"><i class="ring"></i>` + (WINNERS.includes(i) ? `<b class="rank">0${WINNERS.indexOf(i) + 1}</b>` : '');
-  wall.appendChild(d);
+  wall.insertBefore(d, $('scan'));
   const cx = x + 140, cy = y + 140;
-  return { el: d, img: d.querySelector('img'), ring: d.querySelector('.ring'), rank: d.querySelector('.rank'), cx, delay: Math.hypot(cx - 960, cy - 540) / 900 * 0.32 };
+  return { el: d, ring: d.querySelector('.ring'), rank: d.querySelector('.rank'), cx, cy, delay: Math.hypot(cx - 960, cy - 540) / 900 * 0.3 };
 });
+const W1 = tiles[WINNERS[0]];
 const car = $('car');
 const cards = CARDS.map((name, i) => {
   const d = document.createElement('div');
@@ -207,7 +261,7 @@ const cards = CARDS.map((name, i) => {
   d.innerHTML = `<img class="face" alt="" src="clips/${name}.jpg"><img class="refl" alt="" src="clips/${name}.jpg">`;
   d.style.transform = `rotateY(${i * 45}deg) translateZ(640px)`;
   car.appendChild(d);
-  return { el: d, face: d.querySelector('.face'), refl: d.querySelector('.refl'), a: i * 45 };
+  return { face: d.querySelector('.face'), refl: d.querySelector('.refl'), a: i * 45 };
 });
 const statEls = STATS.map(([n, l]) => {
   const d = document.createElement('div');
@@ -216,40 +270,103 @@ const statEls = STATS.map(([n, l]) => {
   $('stats').appendChild(d);
   return d;
 });
-$('tickRow').innerHTML = Array(4).fill('Design<i>·</i>Code<i>·</i>Motion<i>·</i>').join('');
+const TICK = 'Design<i>·</i>Code<i>·</i>Motion<i>·</i>';
+$('row1').innerHTML = TICK.repeat(4); $('row1').style.top = '250px';
+$('row2').innerHTML = TICK.repeat(4); $('row2').style.top = '560px';
+// big type: split every line into characters for a staggered reveal
+const bigChars = [...$('bigType').children].map(m => {
+  const s = m.firstElementChild, text = s.textContent;
+  s.innerHTML = [...text].map(c => `<span class="ch">${c === ' ' ? '&nbsp;' : c}</span>`).join('');
+  return [...s.children];
+});
 const resBars = [...$('res').querySelectorAll('i')];
 const RES_W = [0.75, 0.55, 1, 0.02];
 
 const E = {
-  stage: $('stage'), frame: $('frame'), white: $('white'), hook: $('hook'), words: [...$('hook').children].map(m => m.firstElementChild),
-  codeWord: $('codeWord'), pill: $('pill'), pillIn: $('pillIn'), pillText: $('pillText'), caret: $('caret'), pillPh: $('pillPh'), gen: $('gen'),
-  dark: $('dark'), wall, scan: $('scan'), bigType: $('bigType'), bigLines: [...$('bigType').children].map(m => m.firstElementChild),
-  carWrap: $('carWrap'), phoneScene: $('phoneScene'), bezel: $('bezel'), screen: $('screen'), phoneFrame: $('phoneFrame'), screenStill: $('screenStill'),
-  flipWrap: $('flipWrap'), flip: $('flip'), stats: $('stats'), ticker: $('ticker'), tickRow: $('tickRow'),
-  logo: $('logo'), mark: $('mark'), wordmark: $('wordmark').firstElementChild, tagline: $('tagline').firstElementChild,
-  cursor: $('cursor'), black: $('black'),
+  stage: $('stage'), wsafe: $('wsafe'), dsafe: $('dsafe'), white: $('white'), wcam: $('wcam'),
+  hook: $('hook'), words: [...$('hook').children].map(m => m.firstElementChild), wordBoxes: [...$('hook').children],
+  pill: $('pill'), pillIn: $('pillIn'), pillText: $('pillText'), caret: $('caret'), pillPh: $('pillPh'), gen: $('gen'), cursor: $('cursor'),
+  dark: $('dark'), wall, scan: $('scan'), bigType: $('bigType'), carWrap: $('carWrap'),
+  phoneScene: $('phoneScene'), bezel: $('bezel'), screen: $('screen'), phoneFrame: $('phoneFrame'), screenStill: $('screenStill'),
+  flipWrap: $('flipWrap'), flip: $('flip'), stats: $('stats'), ticker: $('ticker'), row1: $('row1'), row2: $('row2'),
+  logo: $('logo'), mark: $('mark'), wordmark: $('wordmark').firstElementChild, tagline: $('tagline').firstElementChild, black: $('black'),
 };
 
-/* ---------- geometry measured at runtime (match cuts) ---------- */
+/* ---------- geometry (measured at runtime where it matters) ---------- */
 const PILL = { x: 420, y: 470, w: 1080, h: 140 };
 const GEN_C = { x: PILL.x + PILL.w - 20 - 130, y: PILL.y + PILL.h / 2 };
 const SCREEN = { x: 570, y: 129, w: 380, h: 822 };
-let CODE = { x: 1300, y: 460, w: 380, h: 170 }, FRONT = { x: 695, y: 205, w: 530, h: 530 };
-function measure() {
-  const st = E.stage.getBoundingClientRect(), k = st.width / 1920;
-  const rel = r => ({ x: (r.left - st.left) / k, y: (r.top - st.top) / k, w: r.width / k, h: r.height / k });
-  E.hook.style.display = ''; E.words.forEach(w => (w.style.transform = 'none'));
-  CODE = rel(E.codeWord.getBoundingClientRect());
-  E.dark.style.display = ''; E.dark.style.clipPath = 'none'; E.carWrap.style.display = ''; E.carWrap.style.opacity = '1';
-  car.style.transform = 'rotateX(-6deg) rotateY(0deg)';
-  FRONT = rel(cards[0].face.getBoundingClientRect());
+let WORDS = [], CODE = { x: 1300, y: 460, w: 380, h: 170 }, FRONT = { x: 695, y: 205, w: 530, h: 530 }, MARK = { x: 960, y: 420 };
+let OFF = { x: 0, y: 0 };
+let WCAM, WALLCAM, BIGCAM, CARCAM, PHONECAM, TICKCAM, LOGOCAM;
+
+function buildCameras() {
+  const span = k => { const a = WORDS[0], b = WORDS[k]; return { cx: (a.x + b.x + b.w) / 2, w: b.x + b.w - a.x }; };
+  const zFor = w => Math.max(1, Math.min(2.1, 1500 / w));
+  const s0 = span(0), s1 = span(1), s2 = span(2), s3 = span(3);
+  // bar 1: start tight on the first word and step back as each word lands; bar 2: push in, race to the button, dive through it
+  WCAM = camera({ z: zFor(s0.w), x: s0.cx, y: 540, r: 0 }, [
+    [1 * B, { z: zFor(s1.w), x: s1.cx }, { w: 9, z: 0.9 }],
+    [2 * B, { z: zFor(s2.w), x: s2.cx }, { w: 9, z: 0.9 }],
+    [3 * B, { z: zFor(s3.w), x: s3.cx }, { w: 9, z: 0.9 }],
+    [2.0, { z: 1.0, x: 960, y: 540 }, { w: 8, z: 0.95 }],
+    [2.28, { z: 1.3, x: 800 }, { w: 5, z: 1 }],
+    [3.0, { z: 1.85, x: GEN_C.x - 40 }, { w: 9, z: 0.95 }],
+    [3.56, { z: 4.4, x: GEN_C.x, y: GEN_C.y }, { ease: 'in', d: 0.44 }],
+  ]);
+  // bar 3: from a close-up on the centre tile, pull out to the whole wall, then dive into winner 01
+  WALLCAM = camera({ z: 2.8, x: 960, y: 540, r: -3 }, [
+    [4.02, { z: 1.0, r: 0 }, { w: 7, z: 0.95 }],
+    [5.62, { z: 4.6, x: W1.cx, y: W1.cy }, { ease: 'in', d: 0.4 }],
+  ]);
+  // bar 4: the type zooms through from the tile, slow push, pull back as it exits
+  BIGCAM = camera({ z: 0.62, x: 960, y: 540, r: 0 }, [
+    [6.0, { z: 1.0 }, { w: 9, z: 0.92 }],
+    [6.3, { z: 1.07 }, { w: 1.5, z: 1 }],
+    [7.72, { z: 0.86 }, { w: 8, z: 1 }],
+  ]);
+  // bar 5: crane in, then push with the whip
+  CARCAM = camera({ z: 0.8, x: 960, y: 470, r: 0 }, [
+    [8.0, { z: 1.0 }, { w: 4, z: 1 }],
+    [9.5, { z: 1.28, y: 450 }, { w: 9, z: 0.95 }],
+  ]);
+  // bar 6: dolly out from the phone, then drift onto the results panel
+  PHONECAM = camera({ z: 1.22, x: 960, y: 540, r: 0 }, [
+    [10.0, { z: 1.0 }, { w: 5, z: 1 }],
+    [11.6, { z: 1.12, x: 1180 }, { w: 5, z: 1 }],
+  ]);
+  // bar 8: roll and dolly out across the ticker
+  TICKCAM = camera({ z: 1.3, x: 960, y: 540, r: -5 }, [[14.0, { z: 1.0, r: 0 }, { w: 3.5, z: 1 }]]);
+  // bar 9: pull back from a close-up on the mark while it scales in (never fills the frame with white), then a slow push
+  LOGOCAM = camera({ z: 2.6, x: MARK.x, y: MARK.y, r: 0 }, [
+    [16.0, { z: 1.0, x: 960, y: 540 }, { w: 6, z: 1 }],
+    [16.9, { z: 1.07 }, { w: 1.2, z: 1 }],
+  ]);
 }
 
-/* ---------- cursor path (sum of springs) ---------- */
-const CUR0 = [1680, 1000];
-const CURK = [[2.04, 790, 552], [3.02, 1335, 552]];
+function measure() {
+  E.wsafe.style.display = ''; E.white.style.display = '';
+  const safeRect = E.wsafe.getBoundingClientRect(), k = safeRect.width / 1920;
+  const rel = (r, base) => ({ x: (r.left - base.left) / k, y: (r.top - base.top) / k, w: r.width / k, h: r.height / k });
+  E.wcam.style.transform = 'none'; E.wcam.style.filter = 'none';
+  E.hook.style.display = ''; E.words.forEach(w => (w.style.transform = 'none'));
+  WORDS = E.wordBoxes.map(b => rel(b.getBoundingClientRect(), safeRect));
+  CODE = WORDS[3];
+  const d = E.dsafe.getBoundingClientRect();
+  E.dark.style.display = ''; E.dark.style.clipPath = 'none';
+  E.carWrap.style.display = ''; E.carWrap.style.opacity = '1'; E.carWrap.style.transform = 'none'; E.carWrap.style.filter = 'none';
+  car.style.transform = 'rotateX(-6deg) rotateY(0deg)';
+  FRONT = rel(cards[0].face.getBoundingClientRect(), d);
+  E.logo.style.display = ''; E.logo.style.transform = 'none'; E.logo.style.filter = 'none';
+  const m = rel(E.mark.getBoundingClientRect(), d);
+  MARK = { x: m.x + m.w / 2, y: m.y + m.h / 2 };
+  buildCameras();
+}
+
+/* ---------- cursor path (sum of springs, in white-scene coords) ---------- */
+const CUR0 = [1680, 1000], CURK = [[2.04, 790, 552], [3.02, 1335, 552]];
 const curAt = t => {
-  let x = CUR0[0], y = CUR0[1], px_ = CUR0[0], py_ = CUR0[1];
+  let x = CUR0[0], y = CUR0[1], px_ = x, py_ = y;
   for (const [tk, kx, ky] of CURK) { const s = S(t - tk, 11, 1); x += (kx - px_) * s; y += (ky - py_) * s; px_ = kx; py_ = ky; }
   return [x, y];
 };
@@ -259,52 +376,67 @@ const curAt = t => {
    ===================================================================== */
 let phoneReady = false;
 function seek(tIn) {
+  if (!WCAM) return 0;                       // cameras are built from measured layout
   const t = ((tIn % P) + P) % P;
 
   /* --- bars 1–2: white scene --- */
-  const whiteOn = t < 4.1;
-  show(E.white, whiteOn); show(E.hook, whiteOn && t < 2.9); show(E.pill, whiteOn && t >= 2.0);
+  const whiteOn = t < 4.05;
+  show(E.white, whiteOn); show(E.wsafe, whiteOn);
+  let wc = null;
   if (whiteOn) {
+    wc = applyCam(E.wcam, WCAM, t);
+    show(E.hook, t < 2.9); show(E.pill, t >= 2.0);
     E.words.forEach((w, i) => {
-      const inn = S(t - beat(i), 17, 0.9);
-      const out = i < 3 ? S(t - (2.0 + i * 0.05), 16, 1) : 0;
-      w.style.transform = `translateY(${((1 - inn) * 105 - out * 105).toFixed(2)}%)`;
+      const inn = S(t - i * B, 17, 0.9), out = i < 3 ? S(t - (2.0 + i * 0.05), 16, 1) : 0;
+      w.style.transform = `translateY(${((1 - inn) * 105 - out * 105).toFixed(2)}%) scale(${(1.08 - 0.08 * inn).toFixed(4)})`;
       w.style.filter = inn < 0.98 ? `blur(${((1 - inn) * 8).toFixed(2)}px)` : 'none';
       w.style.opacity = i === 3 ? (1 - ramp(t, 2.02, 0.2)).toFixed(3) : '1';
     });
     if (t >= 2.0) {
       const m = S(t - 2.0, 12, 0.86);
-      const r = { x: mix(CODE.x, PILL.x, m), y: mix(CODE.y, PILL.y, m), w: mix(CODE.w, PILL.w, m), h: mix(CODE.h, PILL.h, m) };
       const P_ = E.pill.style;
-      P_.left = px(r.x); P_.top = px(r.y); P_.width = px(r.w); P_.height = px(r.h);
+      P_.left = px(mix(CODE.x, PILL.x, m)); P_.top = px(mix(CODE.y, PILL.y, m));
+      P_.width = px(mix(CODE.w, PILL.w, m)); P_.height = px(mix(CODE.h, PILL.h, m));
       P_.borderRadius = px(mix(18, 70, m));
       P_.opacity = ramp(t, 2.0, 0.12).toFixed(3);
       E.pillIn.style.opacity = ramp(t, 2.12, 0.2).toFixed(3);
-      const n = TYPED.split('').filter((_, i) => t >= 2.25 + i * B / 8).length;
+      const n = [...TYPED].filter((_, i) => t >= 2.25 + i * B / 8).length;
       E.pillText.textContent = TYPED.slice(0, n);
       E.pillPh.style.display = n ? 'none' : '';
       const lastKey = n ? 2.25 + (n - 1) * B / 8 : 2.0;
       E.caret.style.opacity = ((t - lastKey) % 1) < 0.55 ? '1' : '0';
-      const press = S(t - beat(7), 34, 0.75) - S(t - (beat(7) + 0.1), 18, 0.9);
+      const press = S(t - 7 * B, 34, 0.75) - S(t - (7 * B + 0.1), 18, 0.9);
       E.gen.style.transform = `scale(${(1 - 0.06 * press).toFixed(4)})`;
+    }
+    const curOn = t >= 2.0 && t < 3.9;
+    show(E.cursor, curOn);
+    if (curOn) {
+      const [cx, cy] = curAt(t);
+      const press = S(t - 7 * B, 34, 0.75) - S(t - (7 * B + 0.1), 18, 0.9);
+      E.cursor.style.transform = `translate(${px(cx - 13.7)},${px(cy - 8)}) scale(${(1 - 0.16 * press).toFixed(4)})`;
+      E.cursor.style.opacity = (ramp(t, 2.02, 0.15) * (1 - ramp(t, 3.62, 0.18))).toFixed(3);
     }
   }
 
-  /* --- the drop: a circle opens out of the button into the dark scene --- */
-  const R = t < 3.56 ? 0 : 50 + ei(ramp(t, 3.56, 4.0 - 3.56)) * 2250;
+  /* --- the drop: a circle opens out of the button (it follows the camera) --- */
   const darkOn = t >= 3.56;
   show(E.dark, darkOn);
-  if (darkOn) E.dark.style.clipPath = t < 4.0 ? `circle(${R.toFixed(1)}px at ${GEN_C.x}px ${GEN_C.y}px)` : 'none';
+  if (darkOn) {
+    if (t < 4.0 && wc) {
+      const [bx, by] = project(wc, GEN_C.x, GEN_C.y);
+      const R = 50 * wc.z + ei(ramp(t, 3.56, 0.44)) * 2600;
+      E.dark.style.clipPath = `circle(${R.toFixed(1)}px at ${(OFF.x + bx).toFixed(1)}px ${(OFF.y + by).toFixed(1)}px)`;
+    } else E.dark.style.clipPath = 'none';
+  }
 
-  /* --- bar 3: wall of real clips, scan line, 3 winners --- */
-  const wallOn = t >= 3.56 && t < 6.1;
-  show(E.wall, wallOn); show(E.scan, wallOn && t >= 4.4 && t < 5.7);
+  /* --- bar 3: wall of real clips, scan line, 3 winners, dive into 01 --- */
+  const wallOn = t >= 3.56 && t < 6.08;
+  show(E.wall, wallOn);
   if (wallOn) {
-    const out = ramp(t, 5.86, 0.22);
-    E.wall.style.transform = `scale(${(1 + 0.035 * ramp(t, 4.0, BAR) + 0.06 * eo(out)).toFixed(4)})`;
-    E.wall.style.opacity = (1 - out).toFixed(3);
-    E.wall.style.filter = out > 0 ? `blur(${(out * 10).toFixed(2)}px)` : 'none';
+    applyCam(E.wall, WALLCAM, t, { pulsed: true });
+    E.wall.style.opacity = (1 - ramp(t, 5.9, 0.14)).toFixed(3);
     const scanX = 212 + eio(ramp(t, 4.5, 1.0)) * 1496;
+    show(E.scan, t >= 4.4 && t < 5.7);
     E.scan.style.left = px(scanX);
     E.scan.style.opacity = (ramp(t, 4.45, 0.1) * (1 - ramp(t, 5.5, 0.15))).toFixed(3);
     const decided = ramp(t, 5.5, 0.25);
@@ -312,57 +444,65 @@ function seek(tIn) {
       const a = S(t - (4.0 + tl.delay), 16, 0.9);
       const lit = t > 4.45 && t < 5.65 ? Math.max(0, 1 - Math.abs(scanX - tl.cx) / 170) : 0;
       const w = WINNERS.indexOf(i);
-      const win = w >= 0 ? S(t - (5.0 + w * B / 2), 22, 0.85) : 0;
-      const base = w >= 0 ? 0.72 + 0.28 * clamp01(win) : 0.72 * (1 - 0.72 * decided);
+      const win = w >= 0 ? clamp01(S(t - (5.0 + w * B / 2), 22, 0.85)) : 0;
+      const base = w >= 0 ? 0.72 + 0.28 * win : 0.72 * (1 - 0.75 * decided);
       tl.el.style.opacity = (clamp01(a) * clamp01(base + 0.28 * lit)).toFixed(3);
-      tl.el.style.transform = `scale(${(0.9 + 0.1 * a + 0.03 * clamp01(win)).toFixed(4)})`;
-      tl.ring.style.opacity = clamp01(win).toFixed(3);
-      if (tl.rank) { tl.rank.style.opacity = clamp01(win).toFixed(3); tl.rank.style.transform = `translateY(${((1 - clamp01(win)) * 8).toFixed(2)}px)`; }
+      tl.el.style.transform = `scale(${(0.9 + 0.1 * a + 0.04 * win).toFixed(4)})`;
+      tl.ring.style.opacity = win.toFixed(3);
+      if (tl.rank) { tl.rank.style.opacity = win.toFixed(3); tl.rank.style.transform = `translateY(${((1 - win) * 8).toFixed(2)}px)`; }
     });
   }
 
-  /* --- bar 4: the key output as big type --- */
+  /* --- bar 4: the key output as big type, characters staggered --- */
   const bigOn = t >= 5.9 && t < 8.1;
   show(E.bigType, bigOn);
   if (bigOn) {
-    E.bigType.style.transform = `scale(${(1 + 0.035 * ramp(t, 6.0, BAR)).toFixed(4)})`;
-    E.bigLines.forEach((l, i) => {
-      const inn = S(t - (6.0 + i * B), 15, 0.9), out = S(t - (7.72 + i * 0.05), 16, 1);
-      l.style.transform = `translateY(${((1 - inn) * 105 - out * 105).toFixed(2)}%)`;
-      l.style.filter = inn < 0.98 ? `blur(${((1 - inn) * 8).toFixed(2)}px)` : 'none';
-    });
+    applyCam(E.bigType, BIGCAM, t, { pulsed: true });
+    E.bigType.style.opacity = ramp(t, 5.92, 0.12).toFixed(3);
+    bigChars.forEach((chars, li) => chars.forEach((ch, ci) => {
+      const t0 = 6.0 + li * B + ci * 0.022;
+      const inn = S(t - t0, 15, 0.88), out = S(t - (7.7 + li * 0.05 + ci * 0.01), 15, 1);
+      ch.style.transform = `translateY(${((1 - inn) * 105 - out * 110).toFixed(2)}%)`;
+      ch.style.filter = inn < 0.97 || out > 0.03 ? `blur(${(((1 - inn) + out) * 9).toFixed(2)}px)` : 'none';
+    }));
   }
 
-  /* --- bar 5: 3D carousel with floor reflections, whip onto the hero --- */
+  /* --- bar 5: 3D carousel, crane down, whip with a push --- */
   const carOn = t >= 7.9 && t < 10.12;
   show(E.carWrap, carOn);
   if (carOn) {
+    applyCam(E.carWrap, CARCAM, t, { pulsed: true, blur: false });
     E.carWrap.style.opacity = (ramp(t, 7.95, 0.25) * (1 - ramp(t, 9.97, 0.12))).toFixed(3);
     const theta = t2 => {
-      const slow = 22 - 34 * (t2 - 8.0);
       const at = 22 - 34 * (9.5 - 8.0);
-      return t2 < 9.5 ? slow : mix(at, -360, S(t2 - 9.5, 13, 0.97));
+      return t2 < 9.5 ? 22 - 34 * (t2 - 8.0) : mix(at, -360, S(t2 - 9.5, 13, 0.97));
     };
     const th = theta(t), vel = (theta(t) - theta(t - 1 / 240)) * 240;
-    car.style.transform = `rotateX(-6deg) rotateY(${th.toFixed(3)}deg)`;
-    const blur = Math.min(14, Math.abs(vel) * 0.012);
+    const rx = -24 + 18 * S(t - 8.0, 4, 1);
+    car.style.transform = `rotateX(${rx.toFixed(3)}deg) rotateY(${th.toFixed(3)}deg)`;
+    const blur = Math.min(16, Math.abs(vel) * 0.013 + camBlur(CARCAM, t));
     cards.forEach(c => {
-      const face = Math.cos((c.a + th) * Math.PI / 180);
-      c.face.style.opacity = (0.3 + 0.7 * Math.max(0, face)).toFixed(3);
+      const facing = Math.cos((c.a + th) * Math.PI / 180);
+      c.face.style.opacity = (0.3 + 0.7 * Math.max(0, facing)).toFixed(3);
       const f = blur > 0.3 ? `blur(${blur.toFixed(2)}px)` : 'none';
       c.face.style.filter = f; c.refl.style.filter = f;
     });
   }
 
-  /* --- bar 6: match cut into the phone, panel flips into results --- */
+  /* --- bar 6: match cut into the phone (measured), slow orbit, panel flips into results --- */
   const phoneOn = t >= 9.97 && t < 12.3;
   show(E.phoneScene, phoneOn);
   if (phoneOn) {
-    const m = S(t - 10.0, 11, 0.9);
     const push = S(t - 12.0, 14, 1);
-    E.phoneScene.style.transform = `translateX(${(-push * 1500).toFixed(2)}px) scale(${(1 + 0.03 * ramp(t, 10.0, BAR)).toFixed(4)})`;
+    const ry = -8 * eio(ramp(t, 10.3, 1.7));
+    const pc = applyCam(E.phoneScene, PHONECAM, t, { pulsed: true, extra: `translateX(${(-push * 1500).toFixed(2)}px) perspective(2400px) rotateY(${ry.toFixed(3)}deg)` });
     E.phoneScene.style.opacity = (1 - ramp(t, 12.0, 0.2)).toFixed(3);
-    const r = { x: mix(FRONT.x, SCREEN.x, m), y: mix(FRONT.y, SCREEN.y, m), w: mix(FRONT.w, SCREEN.w, m), h: mix(FRONT.h, SCREEN.h, m) };
+    // where the front card was on screen at the cut, expressed in this scene's coordinates
+    const cc = CARCAM(10.0); cc.z *= pulse(10.0);
+    const [ax, ay] = project(cc, FRONT.x, FRONT.y), [bx, by] = project(cc, FRONT.x + FRONT.w, FRONT.y + FRONT.h);
+    const [sx0, sy0] = unproject(pc, ax, ay), [sx1, sy1] = unproject(pc, bx, by);
+    const m = S(t - 10.0, 11, 0.9);
+    const r = { x: mix(sx0, SCREEN.x, m), y: mix(sy0, SCREEN.y, m), w: mix(sx1 - sx0, SCREEN.w, m), h: mix(sy1 - sy0, SCREEN.h, m) };
     const rad = mix(40, 52, m);
     const sc = E.screen.style;
     sc.left = px(r.x); sc.top = px(r.y); sc.width = px(r.w); sc.height = px(r.h); sc.borderRadius = px(rad);
@@ -376,77 +516,81 @@ function seek(tIn) {
     if (phoneReady) { try { E.phoneFrame.contentWindow.seek(3.25 + (t - 10.0)); } catch { /* not ready */ } }
     const fin = S(t - 10.25, 13, 0.9);
     E.flipWrap.style.opacity = clamp01(fin).toFixed(3);
-    E.flipWrap.style.transform = `translateX(${((1 - fin) * 80).toFixed(2)}px)`;
+    E.flipWrap.style.transform = `translateX(${((1 - fin) * 90).toFixed(2)}px)`;
     E.flip.style.transform = `rotateY(${(180 * S(t - 11.0, 12, 0.88)).toFixed(3)}deg)`;
     resBars.forEach((b, i) => b.style.setProperty('--w', (RES_W[i] * 100 * eo(ramp(t, 11.3 + i * 0.08, 0.45))).toFixed(2) + '%'));
   }
 
-  /* --- bar 7: big stats on push cuts --- */
+  /* --- bar 7: big stats, alternating push cuts and zoom-throughs --- */
   const statsOn = t >= 11.95 && t < 14.3;
   show(E.stats, statsOn);
-  if (statsOn) statEls.forEach((el, j) => {
-    const tj = 12.0 + j * B;
-    const inn = S(t - tj, 16, 0.92), out = j < 3 ? S(t - (tj + B), 16, 0.92) : S(t - 14.0, 16, 1);
-    const x = (1 - inn) * 1000 - out * 1000;
-    const on = inn > 0.001 && out < 0.999;
-    show(el, on);
-    if (!on) return;
-    el.style.transform = `translateX(${x.toFixed(2)}px) scale(${(0.94 + 0.06 * inn - 0.04 * out).toFixed(4)})`;
-    el.style.opacity = (clamp01(inn * 1.4) * (1 - clamp01(out * 1.4))).toFixed(3);
-  });
+  if (statsOn) {
+    E.stats.style.transform = `scale(${pulse(t).toFixed(5)})`;
+    E.stats.style.transformOrigin = '960px 540px';
+    statEls.forEach((el, j) => {
+      const tj = 12.0 + j * B;
+      const inn = S(t - tj, 16, 0.92), out = j < 3 ? S(t - (tj + B), 24, 0.95) : S(t - 14.0, 16, 1);   // outgoing clears fast so numbers never read together
+      const on = inn > 0.001 && out < 0.999;
+      show(el, on);
+      if (!on) return;
+      let tr, bl;
+      if (j % 2 === 0) {                 // push: in from the right, out to the left
+        tr = `translateX(${((1 - inn) * 1000 - out * 1000).toFixed(2)}px) scale(${(0.94 + 0.06 * inn - 0.04 * out).toFixed(4)})`;
+        bl = 0;
+      } else {                           // zoom-through: in from large, out to small
+        tr = `scale(${(mix(1.9, 1, inn) * mix(1, 0.55, out)).toFixed(4)})`;
+        bl = (1 - inn) * 14 + out * 10;
+      }
+      el.style.transform = tr;
+      el.style.filter = bl > 0.4 ? `blur(${bl.toFixed(2)}px)` : 'none';
+      el.style.opacity = (clamp01((inn - 0.08) * 1.6) * (1 - clamp01(out * 2.4))).toFixed(3);
+    });
+  }
 
-  /* --- bar 8: 3-word ticker --- */
+  /* --- bar 8: two-row ticker, roll + dolly --- */
   const tickOn = t >= 13.95 && t < 16.1;
   show(E.ticker, tickOn);
   if (tickOn) {
-    E.tickRow.style.transform = `translateX(${(260 - (t - 14.0) * 820).toFixed(2)}px)`;
+    applyCam(E.ticker, TICKCAM, t, { pulsed: true, blur: false });
+    E.row1.style.transform = `translateX(${(260 - (t - 14.0) * 820).toFixed(2)}px)`;
+    E.row2.style.transform = `translateX(${(-2400 + (t - 14.0) * 700).toFixed(2)}px)`;
     E.ticker.style.opacity = (ramp(t, 14.0, 0.15) * (1 - ramp(t, 15.85, 0.18))).toFixed(3);
   }
 
-  /* --- bar 9: logo reveal, bar 10: fade to black --- */
-  const logoOn = t >= 15.95;
+  /* --- bar 9: zoom out through the logo; bar 10: fade to black --- */
+  const logoOn = t >= 15.98;
   show(E.logo, logoOn);
   if (logoOn) {
-    const a = S(t - 16.0, 14, 0.9);
-    E.mark.style.transform = `scale(${(0.7 + 0.3 * a).toFixed(4)})`;
-    E.mark.style.opacity = clamp01(a * 1.5).toFixed(3);
-    E.mark.style.filter = a < 0.98 ? `blur(${((1 - a) * 10).toFixed(2)}px)` : 'none';
+    applyCam(E.logo, LOGOCAM, t);
+    const a = S(t - 16.0, 13, 0.88);
+    E.mark.style.transform = `scale(${(0.35 + 0.65 * a).toFixed(4)}) rotate(${((1 - a) * -24).toFixed(2)}deg)`;
+    E.mark.style.opacity = clamp01(a * 1.6).toFixed(3);
     [[E.wordmark, 16.5], [E.tagline, 17.0]].forEach(([el, t0]) => {
       const s = S(t - t0, 15, 0.9);
       el.style.transform = `translateY(${((1 - s) * 105).toFixed(2)}%)`;
       el.style.filter = s < 0.98 ? `blur(${((1 - s) * 8).toFixed(2)}px)` : 'none';
     });
-    E.logo.style.transform = `scale(${(1 + 0.03 * ramp(t, 16.0, 2 * BAR)).toFixed(4)})`;
   }
   E.black.style.opacity = Math.max(eio(ramp(t, 18.4, 1.45)), 1 - ramp(t, 0, 0.3)).toFixed(3);
-
-  /* --- cursor (bars 2) --- */
-  const curOn = t >= 2.0 && t < 4.0;
-  show(E.cursor, curOn);
-  if (curOn) {
-    const [cx, cy] = curAt(t);
-    const press = S(t - beat(7), 34, 0.75) - S(t - (beat(7) + 0.1), 18, 0.9);
-    E.cursor.style.transform = `translate(${px(cx - 13.7)},${px(cy - 8)}) scale(${(1 - 0.16 * press).toFixed(4)})`;
-    E.cursor.style.opacity = (ramp(t, 2.02, 0.15) * (1 - ramp(t, 3.7, 0.2))).toFixed(3);
-  }
   return t;
 }
 
 /* =====================================================================
-   Player: fit, visibility-driven playback, sound synced to the song
+   Player: full-bleed fit, visibility-driven playback, seek bar, sound
    ===================================================================== */
 const params = new URLSearchParams(location.search);
 const RENDER = params.has('render');
 if (RENDER) document.documentElement.classList.add('render');
 
 function fit() {
-  const s = RENDER ? 1 : Math.min(innerWidth / 1920, innerHeight / 1080);
-  const f = E.frame.style;
-  f.width = px(1920 * s); f.height = px(1080 * s);
-  f.left = px((innerWidth - 1920 * s) / 2); f.top = px((innerHeight - 1080 * s) / 2);
-  E.stage.style.transform = `scale(${s})`;
+  const vw = RENDER ? 1920 : innerWidth, vh = RENDER ? 1080 : innerHeight;
+  const s = Math.min(vw / 1920, vh / 1080);
+  const W = vw / s, H = vh / s;
+  OFF = { x: (W - 1920) / 2, y: (H - 1080) / 2 };
+  const st = E.stage.style;
+  st.width = px(W); st.height = px(H); st.transform = `scale(${s})`;
+  for (const el of [E.wsafe, E.dsafe]) { el.style.left = px(OFF.x); el.style.top = px(OFF.y); }
 }
-addEventListener('resize', fit);
 fit();
 
 const imgs = [...document.images];
@@ -456,85 +600,109 @@ window.ready = document.fonts.ready
   .then(() => Promise.all(['500 20px Geist', '600 20px Geist'].map(f => document.fonts.load(f))))
   .then(() => Promise.all(imgs.map(i => i.decode().catch(() => {}))))
   .then(() => new Promise(res => {
-    const done = () => { phoneReady = !!(E.phoneFrame.contentWindow && E.phoneFrame.contentWindow.seek); res(); };
+    const done = () => { try { phoneReady = !!E.phoneFrame.contentWindow.seek; } catch { phoneReady = false; } res(); };
     try { if (E.phoneFrame.contentWindow.seek) return done(); } catch { /* loading */ }
     E.phoneFrame.addEventListener('load', () => (E.phoneFrame.contentWindow.ready || Promise.resolve()).then(done), { once: true });
     setTimeout(done, 4000);
   }))
   .then(() => { measure(); seek(Number(params.get('t')) || 0); });
 
-/* ruler: 40 beats, bars as majors */
-const ruler = $('ruler'), head = $('rulerHead');
-for (let i = 0; i <= 40; i++) {
-  const tick = document.createElement('i');
-  if (i % 4 === 0) tick.className = 'bar';
-  tick.style.left = `calc(14px + (100% - 28px) * ${i / 40})`;
-  ruler.insertBefore(tick, head);
-}
-
-/* audio: one site-wide owner at a time (shared with the dashboard) */
-const audio = new Audio('audio/island-breeze-cut.mp3');
+/* audio: one owner per page (shared with the dashboard) */
+const audio = new Audio('audio/film-mix.mp3');
 audio.preload = 'auto';
 audio.loop = true;
-window.filmAudio = audio; // handy for testing
+window.filmAudio = audio;
 const bus = (() => { try { return (window.parent !== window && window.parent.SiteAudio) || window.SiteAudio || null; } catch { return window.SiteAudio || null; } })();
-const soundBtn = $('sound'), soundLabel = $('soundLabel');
-let soundOn = false, visible = RENDER, clock0 = performance.now() / 1000, lastT = 0;
+
+const playBtn = $('playBtn'), soundBtn = $('sound'), soundLabel = $('soundLabel'), timeEl = $('time'), scrub = $('scrub'), head = $('head');
+const ICON_PAUSE = '<svg viewBox="0 0 16 16"><rect x="3.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/><rect x="9.5" y="2.5" width="3" height="11" rx="1" fill="currentColor"/></svg>';
+const ICON_PLAY = '<svg viewBox="0 0 16 16"><path d="M4.5 2.8v10.4L13 8z" fill="currentColor"/></svg>';
+let playing = false, soundOn = false, scrubbing = false, scrubT = 0, tHold = 0, clock0 = 0, visible = RENDER;
+const nowS = () => performance.now() / 1000;
+
+// the picture runs on its own clock until the audio has actually seeked to the right spot; then the song is the clock
+let audioSynced = false;
+const clockTime = () => ((nowS() - clock0) % P + P) % P;
+function filmTime() {
+  if (scrubbing) return scrubT;
+  if (!playing) return tHold;
+  if (soundOn && audioSynced && !audio.paused) { clock0 = nowS() - audio.currentTime; return audio.currentTime; }
+  return clockTime();
+}
+function startAudio() {
+  if (!soundOn || !playing) return;
+  audioSynced = false;
+  audio.play().catch(() => setSound(false));            // inside the user gesture (autoplay rules)
+  const seekTo = () => {
+    audio.addEventListener('seeked', () => { audioSynced = Math.abs(audio.currentTime - clockTime()) < 0.3; }, { once: true });   // only trust it if it landed
+    audio.currentTime = clockTime();
+  };
+  if (audio.readyState >= 1) seekTo(); else audio.addEventListener('loadedmetadata', seekTo, { once: true });
+  if (bus) bus.claim('film', () => setSound(false));
+}
+function play(t = tHold) { playing = true; tHold = t; clock0 = nowS() - t; startAudio(); syncUi(); }
+function pause() { tHold = filmTime(); playing = false; audioSynced = false; audio.pause(); syncUi(); }
 function setSound(on) {
   soundOn = on;
   soundBtn.setAttribute('aria-pressed', String(on));
   soundLabel.textContent = on ? 'Sound on' : 'Sound off';
-  if (on) {
-    audio.currentTime = filmTime();
-    audio.play().catch(() => setSound(false));
-    if (bus) bus.claim('film', () => setSound(false));
-  } else {
-    audio.pause();
-    if (bus) bus.release('film');
-  }
+  if (on) startAudio(); else { audioSynced = false; audio.pause(); if (bus) bus.release('film'); }
 }
-function filmTime() {
-  if (soundOn && !audio.paused) return audio.currentTime;
-  return ((performance.now() / 1000 - clock0) % P + P) % P;
-}
+function syncUi() { playBtn.innerHTML = playing ? ICON_PAUSE : ICON_PLAY; playBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play'); }
+playBtn.addEventListener('click', () => (playing ? pause() : play(filmTime())));
 soundBtn.addEventListener('click', () => setSound(!soundOn));
+addEventListener('resize', () => { fit(); seek(filmTime()); });
 
-// start from the top each time the film scrolls into view; stop (and silence) when it leaves
+// seek bar: 40 beats, bars as majors; drag to scrub, click to jump
+const ticks = [];
+for (let i = 0; i <= 40; i++) {
+  const el = document.createElement('i');
+  if (i % 4 === 0) el.className = 'bar';
+  el.style.left = `calc(10px + (100% - 20px) * ${i / 40})`;
+  scrub.insertBefore(el, head);
+  ticks.push(el);
+}
+const tAt = e => { const r = scrub.getBoundingClientRect(); return clamp01((e.clientX - r.left - 10) / (r.width - 20)) * P * 0.9999; };
+let resumeAfter = false;
+scrub.addEventListener('pointerdown', e => {
+  scrub.setPointerCapture(e.pointerId);
+  resumeAfter = playing; if (playing) pause();
+  scrubbing = true; scrubT = tAt(e);
+});
+scrub.addEventListener('pointermove', e => { if (scrubbing) scrubT = tAt(e); });
+const endScrub = () => { if (!scrubbing) return; scrubbing = false; tHold = scrubT; if (resumeAfter) play(scrubT); };
+scrub.addEventListener('pointerup', endScrub);
+scrub.addEventListener('pointercancel', endScrub);
+scrub.addEventListener('keydown', e => {
+  const d = { ArrowRight: BAR, ArrowLeft: -BAR }[e.key];
+  if (!d) return;
+  e.preventDefault();
+  const t = (((filmTime() + d) % P) + P) % P;
+  if (playing) play(t); else tHold = t;
+});
+addEventListener('keydown', e => { if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); playing ? pause() : play(filmTime()); } });
+
+// the film starts from the top when it scrolls into view and stops (silently) when it leaves
 new IntersectionObserver(([e]) => {
   const was = visible;
   visible = e.isIntersecting && e.intersectionRatio > 0.4;
-  if (visible && !was) {
-    clock0 = performance.now() / 1000;
-    if (soundOn) { audio.currentTime = 0; audio.play().catch(() => setSound(false)); if (bus) bus.claim('film', () => setSound(false)); }
-  } else if (!visible && was) {
-    audio.pause();
-  }
+  if (visible && !was) play(0);
+  else if (!visible && was) pause();
 }, { threshold: [0, 0.4, 0.6] }).observe(document.body);
 
-/* quiet UI sounds under the music: typing ticks + the click */
-let actx = null, nbuf = null;
-const SFX = [...TYPED.split('').map((_, i) => [2.25 + i * B / 8, 'key']), [beat(7), 'click']];
-function blip(kind) {
-  if (!actx) { try { actx = new AudioContext(); } catch { return; } }
-  if (!nbuf) { nbuf = actx.createBuffer(1, actx.sampleRate * 0.04, actx.sampleRate); const c = nbuf.getChannelData(0); for (let i = 0; i < c.length; i++) c[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / c.length, 4); }
-  const s = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain();
-  s.buffer = nbuf; f.type = 'bandpass'; f.frequency.value = kind === 'key' ? 4200 : 2600; f.Q.value = 4;
-  g.gain.value = kind === 'key' ? 0.08 : 0.16;
-  s.connect(f); f.connect(g); g.connect(actx.destination); s.start();
-}
-
+const fmt = s => `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, '0')}`;
 function frame() {
-  if (visible) {
+  if (visible || scrubbing) {
     const t = seek(filmTime());
-    if (soundOn && !audio.paused) {
-      const wrapped = t < lastT;
-      for (const [et, k] of SFX) if (wrapped ? (et > lastT || et <= t) : (et > lastT && et <= t)) blip(k);
-    }
-    lastT = t;
-    head.style.left = `calc(14px + (100% - 28px) * ${(t / P).toFixed(4)})`;
+    const f = t / P;
+    head.style.left = `calc(10px + (100% - 20px) * ${f.toFixed(4)})`;
+    ticks.forEach((el, i) => el.classList.toggle('past', i / 40 <= f));
+    timeEl.innerHTML = `<b>${fmt(t)}</b> / ${fmt(P)}`;
+    scrub.setAttribute('aria-valuenow', t.toFixed(1));
   }
   requestAnimationFrame(frame);
 }
+syncUi();
 if (!RENDER) window.ready.then(() => requestAnimationFrame(frame));
 </script>
 </body>
